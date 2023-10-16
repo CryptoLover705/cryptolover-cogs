@@ -55,7 +55,7 @@ class CryptoChannel(commands.Cog):
         else:
             await ctx.send("Invalid action. Use 'enable' or 'disable'.")
 
-    @commands.command(name="list")
+    @commands.command(name="cryptolist")
     async def _cryptochannel_list(self, ctx):
         enabled_channels = list(self.voice_channels.keys())
         if enabled_channels:
