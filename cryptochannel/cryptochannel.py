@@ -27,14 +27,14 @@ class CryptoChannel(commands.Cog):
                         if coin_id in self.voice_channels:
                             price_change_24h = coin["quotes"]["USD"]["percent_change_24h"]
                             name = await self.get_channel_name_with_emoji(coin_id, price_change_24h)
-                            await self.rename_crypto_channel(coin_id, name)
+                            await self.rename_voice_channel(coin_id, name)
 
     async def get_channel_name_with_emoji(self, coin_id, price_change_24h):
         # Define a method to format the channel name with emojis based on price change
         emoji = "🟢" if price_change_24h > 0 else "🔴"
         return f"{emoji} {coin_id} Price: N/A"
 
-    async def rename_crypto_channel(self, coin_id, name):
+    async def rename_voice_channel(self, coin_id, name):
         # Define a method to rename the crypto channel
         # Update the voice channel's name to the specified name
         if coin_id in self.voice_channels:
@@ -47,10 +47,10 @@ class CryptoChannel(commands.Cog):
             if not coins_to_include:
                 await ctx.send("You need to specify at least one cryptocurrency symbol or ID to include.")
                 return
-            await self.create_crypto_channels(ctx.guild, coins_to_include)
+            await self.create_voice_channels(ctx.guild, coins_to_include)
             await ctx.send("Crypto info voice channels have been enabled for the specified coins.")
         elif action == "disable":
-            await self.delete_crypto_channels(ctx.guild)
+            await self.delete_voice_channels(ctx.guild)
             await ctx.send("Crypto info voice channels have been disabled.")
         else:
             await ctx.send("Invalid action. Use 'enable' or 'disable'.")
@@ -72,11 +72,11 @@ class CryptoChannel(commands.Cog):
         
         if enabled:
             if coin not in self.voice_channels:
-                await self.create_crypto_channels(ctx.guild, [coin])
+                await self.create_voice_channels(ctx.guild, [coin])
             await ctx.send(f"Crypto info voice channel for {coin} has been enabled.")
         else:
             if coin in self.voice_channels:
-                await self.delete_crypto_channel(ctx.guild, coin)
+                await self.delete_voice_channel(ctx.guild, coin)
                 await ctx.send(f"Crypto info voice channel for {coin} has been disabled.")
             else:
                 await ctx.send(f"Crypto info voice channel for {coin} is not currently enabled.")
@@ -88,26 +88,26 @@ class CryptoChannel(commands.Cog):
         if name is None:
             if coin in self.voice_channels:
                 default_name = await self.get_default_channel_name(coin)
-                await self.rename_crypto_channel(ctx.guild, coin, default_name)
+                await self.rename_voice_channel(ctx.guild, coin, default_name)
                 await ctx.send(f"Name of the {coin} info voice channel has been reset to the default.")
             else:
                 await ctx.send(f"The {coin} info voice channel is not currently enabled.")
         else:
-            await self.rename_crypto_channel(ctx.guild, coin, name)
+            await self.rename_voice_channel(ctx.guild, coin, name)
             await ctx.send(f"Name of the {coin} info voice channel has been updated.")
 
-    async def create_crypto_channels(self, guild, coins_to_include):
+    async def create_voice_channels(self, guild, coins_to_include):
         for coin_symbol in coins_to_include:
             if coin_symbol in self.voice_channels:
-                await self.delete_crypto_channel(guild, coin_symbol)
+                await self.delete_voice_channel(guild, coin_symbol)
             channel = await guild.create_voice_channel(coin_symbol)
             self.voice_channels[coin_symbol] = channel
 
-    async def delete_crypto_channels(self, guild):
+    async def delete_voice_channels(self, guild):
         for coin_symbol in self.voice_channels:
-            await self.delete_crypto_channel(guild, coin_symbol)
+            await self.delete_voice_channel(guild, coin_symbol)
 
-    async def delete_crypto_channel(self, guild, coin):
+    async def delete_voice_channel(self, guild, coin):
         if coin in self.voice_channels:
             channel = self.voice_channels.pop(coin)
             await channel.delete()
