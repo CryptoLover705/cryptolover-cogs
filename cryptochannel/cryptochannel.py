@@ -97,12 +97,13 @@ class CryptoChannel(commands.Cog):
             await ctx.send(f"Name of the {coin} info voice channel has been updated.")
 
     async def create_crypto_channels(self, guild, coins_to_include):
-        category = await guild.create_category("Crypto Channels")  # Create the category
+        category = discord.utils.get(guild.categories, name="Crypto Channels")
+        if not category:
+            category = await guild.create_category("Crypto Channels")  # Create the category if it doesn't exist
+
         for coin_symbol in coins_to_include:
             if coin_symbol in self.voice_channels:
                 await self.delete_crypto_channel(guild, coin_symbol)
-            # Create the voice channel inside the category
-            channel = await guild.create_voice_channel(coin_symbol, category=category)
             # Create the voice channel inside the category with user_limit set to 0
             channel = await guild.create_voice_channel(coin_symbol, category=category, user_limit=0)
             self.voice_channels[coin_symbol] = channel
