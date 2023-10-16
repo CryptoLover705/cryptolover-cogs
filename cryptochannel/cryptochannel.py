@@ -1,5 +1,7 @@
 import discord
-from discord.ext import commands
+from redbot.core import Config, checks, commands
+from redbot.core.bot import Red
+from redbot.core.commands import Cog
 import requests
 
 class CryptoChannel(commands.Cog):
