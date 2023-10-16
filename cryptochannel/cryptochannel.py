@@ -8,7 +8,7 @@ class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers"
-        self.voice_channels = {}  # A dictionary to store created voice channels
+        # self.voice_channels = {}  # A dictionary to store created voice channels
 
     @commands.Cog.listener()
     async def on_ready(self):
