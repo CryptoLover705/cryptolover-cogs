@@ -99,27 +99,28 @@ class CryptoChannel(commands.Cog):
     async def create_crypto_channels(self, guild, coins_to_include):
         # Existing implementation for creating crypto channels remains unchanged
 
-    async def delete_crypto_channels(self, guild):
+        async def delete_crypto_channels(self, guild):
         # Existing implementation for deleting all crypto channels remains unchanged
 
-    async def delete_crypto_channel(self, guild, coin):
-        # Define a method to delete a specific crypto channel
-        # Remove the channel from the dictionary
-        if coin in self.voice_channels:
-            channel = self.voice_channels.pop(coin)
-            await channel.delete()
-    
-    async def get_default_channel_name(self, coin):
-        # Define a method to retrieve the default channel name based on the coin's symbol
-        # Replace with your logic to get default channel names
-        return f"🪙 {coin} Price: N/A"
+            async def delete_crypto_channel(self, guild, coin):
+            # Define a method to delete a specific crypto channel
+            # Remove the channel from the dictionary
+                if coin in self.voice_channels:
+                    channel = self.voice_channels.pop(coin)
+                await channel.delete()
 
-    async def rename_crypto_channel(self, guild, coin, name):
-        # Define a method to rename the crypto channel
-        # Update the voice channel's name to the specified name
-        if coin in self.voice_channels:
-            channel = self.voice_channels[coin]
-            await channel.edit(name=name, reason="Crypto Info Update")
+async def get_default_channel_name(self, coin):
+    # Define a method to retrieve the default channel name based on the coin's symbol
+    # Replace with your logic to get default channel names
+    return f"🪙 {coin} Price: N/A"
+
+async def rename_crypto_channel(self, guild, coin, name):
+    # Define a method to rename the crypto channel
+    # Update the voice channel's name to the specified name
+    if coin in self.voice_channels:
+        channel = self.voice_channels[coin]
+        await channel.edit(name=name, reason="Crypto Info Update")
+
 
 def setup(bot):
     bot.add_cog(CryptoChannel(bot))
