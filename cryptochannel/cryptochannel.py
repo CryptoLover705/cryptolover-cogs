@@ -19,7 +19,7 @@ class CryptoChannel(commands.Cog):
 
     async def update_channel_names(self):
         async with aiohttp.ClientSession() as session:
-            async with session.get(self.coinpaprika_api_url) as response:
+            async with session.get(self.coinpaprika_api_url.format(coin=coin_id)) as response:
                 if response.status == 200:
                     data = await response.json()
                     for coin in data:
