@@ -7,7 +7,7 @@ from typing import Optional
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers/"
+        self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers/{coin_id}"
         self.voice_channels = {}  # A dictionary to store created voice channels
 
     @commands.Cog.listener()
