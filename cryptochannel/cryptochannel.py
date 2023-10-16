@@ -1,12 +1,9 @@
 import discord
-from redbot.core import Config, checks, commands
-from redbot.core.bot import Red
-from redbot.core.commands import Cog
+from discord.ext import commands
 import requests
 
 class CryptoChannel(commands.Cog):
-    def __init__(self, bot: Red):
-        super().__init__()
+    def __init__(self, bot):
         self.bot = bot
         self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers"
 
