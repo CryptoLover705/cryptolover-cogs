@@ -47,6 +47,7 @@ class CryptoChannel(commands.Cog):
 
                             if category is None:
                                 category = await guild.create_category("Price Watch", overwrites=overwrites)
+                                print("Created category")  # Add this line to check if the category is created.
 
                             # Define channel_emoji here
                             channel_emoji = "🟢⬈" if is_price_up else "🔴⬊"
@@ -61,6 +62,7 @@ class CryptoChannel(commands.Cog):
                                 speak=False
                             )
                             await channel.edit(user_limit=0)  # No user limit
+                            print(f"Created voice channel: {channel_name}")  # Add this line to check if the voice channel is created.
                 else:
                     await guild.text_channels[0].send("Failed to fetch cryptocurrency data from Coinpaprika API.")
 
