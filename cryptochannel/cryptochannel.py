@@ -1,6 +1,6 @@
 import discord
 from redbot.core import commands
-import requests
+import aiohttp 
 
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
@@ -22,7 +22,7 @@ class CryptoChannel(commands.Cog):
             await ctx.send("Invalid action. Use 'enable' or 'disable'.")
 
     async def create_crypto_channels(self, guild, coins_to_include):
-        response = requests.get(self.coinpaprika_api_url)
+        response = aiohttp .get(self.coinpaprika_api_url)
         if response.status_code == 200:
             data = response.json()
             category = None
