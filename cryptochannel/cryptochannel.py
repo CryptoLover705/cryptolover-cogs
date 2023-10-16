@@ -39,10 +39,6 @@ class CryptoChannel(commands.Cog):
                             price_change_24h = coin_data["quotes"]["USD"]["percent_change_24h"]
                             is_price_up = price_change_24h > 0
 
-                            # Create channel name and emoji
-                            channel_name = f"🪙 {channel_emoji} {coin_symbol} Price: ${price_usd:.2f}"
-                            channel_emoji = "🟢⬈" if is_price_up else "🔴⬊"
-
                             # Create and configure the voice channel
                             overwrites = {
                                 guild.default_role: discord.PermissionOverwrite(connect=False),
@@ -51,6 +47,12 @@ class CryptoChannel(commands.Cog):
 
                             if category is None:
                                 category = await guild.create_category("Price Watch", overwrites=overwrites)
+
+                            # Define channel_emoji here
+                            channel_emoji = "🟢⬈" if is_price_up else "🔴⬊"
+
+                            # Create channel name with the emoji
+                            channel_name = f"🪙 {channel_emoji} {coin_symbol} Price: ${price_usd:.2f}"
 
                             channel = await category.create_voice_channel(channel_name, reason="Crypto Info")
                             await channel.set_permissions(
