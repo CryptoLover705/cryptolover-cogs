@@ -1,11 +1,16 @@
 import discord
 from redbot.core import commands
 import aiohttp
+import asyncio
+import logging
+from collections import defaultdict
+from typing import Dict, Optional, Union
 
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers"
+        self.voice_channels = {}  # A dictionary to store created voice channels
 
     @commands.command()
     async def cryptochannel(self, ctx, action: str, *coins_to_include: str):
@@ -33,13 +38,11 @@ class CryptoChannel(commands.Cog):
                         coin_name = coin_data["name"]
                         coin_symbol = coin_data["symbol"]
 
-                        # Check if the coin should be included
                         if coin_id in coins_to_include or coin_symbol in coins_to_include:
                             price_usd = coin_data["quotes"]["USD"]["price"]
                             price_change_24h = coin_data["quotes"]["USD"]["percent_change_24h"]
                             is_price_up = price_change_24h > 0
 
-                            # Create and configure the voice channel
                             overwrites = {
                                 guild.default_role: discord.PermissionOverwrite(connect=False),
                                 guild.me: discord.PermissionOverwrite(manage_channels=True, connect=True),
@@ -47,12 +50,8 @@ class CryptoChannel(commands.Cog):
 
                             if category is None:
                                 category = await guild.create_category("Price Watch", overwrites=overwrites)
-                                print("Created category")  # Add this line to check if the category is created.
 
-                            # Define channel_emoji here
                             channel_emoji = "🟢⬈" if is_price_up else "🔴⬊"
-
-                            # Create channel name with the emoji
                             channel_name = f"🪙 {channel_emoji} {coin_symbol} Price: ${price_usd:.2f}"
 
                             channel = await category.create_voice_channel(channel_name, reason="Crypto Info")
@@ -61,8 +60,9 @@ class CryptoChannel(commands.Cog):
                                 connect=False,
                                 speak=False
                             )
-                            await channel.edit(user_limit=0)  # No user limit
-                            print(f"Created voice channel: {channel_name}")  # Add this line to check if the voice channel is created.
+                            await channel.edit(user_limit=0)
+                            
+                            self.voice_channels[coin_id] = channel  # Store the channel in the dictionary
                 else:
                     await guild.text_channels[0].send("Failed to fetch cryptocurrency data from Coinpaprika API.")
 
@@ -72,6 +72,8 @@ class CryptoChannel(commands.Cog):
             for channel in category.channels:
                 await channel.delete()
             await category.delete()
+            # Clear the dictionary when channels are deleted
+            self.voice_channels = {}
 
 def setup(bot):
     bot.add_cog(CryptoChannel(bot))
