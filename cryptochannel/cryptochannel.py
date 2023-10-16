@@ -55,16 +55,16 @@ class CryptoChannel(commands.Cog):
         else:
             await ctx.send("Invalid action. Use 'enable' or 'disable'.")
 
-    @cryptochannel.command(name="list")
+    @commands.command(name="list")
     async def _cryptochannel_list(self, ctx):
         enabled_channels = list(self.voice_channels.keys())
         if enabled_channels:
             enabled_channels_list = "\n".join(enabled_channels)
-            await ctx.send(f"Enabled cryptocurrency info channels:\n{enabled_channels_list}")
+            await ctx.send(f"Enabled cryptocurrency info voice channels:\n{enabled_channels_list}")
         else:
-            await ctx.send("No cryptocurrency info channels are currently enabled.")
+            await ctx.send("No cryptocurrency info voice channels are currently enabled.")
 
-    @cryptochannel.command(name="togglechannel")
+    @commands.command(name="togglechannel")
     async def _cryptochannel_togglechannel(self, ctx, coin: str, enabled: Optional[bool] = None):
         coin = coin.lower()
         if enabled is None:
@@ -81,7 +81,7 @@ class CryptoChannel(commands.Cog):
             else:
                 await ctx.send(f"Crypto info voice channel for {coin} is not currently enabled.")
 
-    @cryptochannel.command(name="name")
+    @commands.command(name="name")
     async def _cryptochannel_name(self, ctx, coin: str, *, name=None):
         coin = coin.lower()
         
@@ -89,38 +89,31 @@ class CryptoChannel(commands.Cog):
             if coin in self.voice_channels:
                 default_name = await self.get_default_channel_name(coin)
                 await self.rename_crypto_channel(ctx.guild, coin, default_name)
-                await ctx.send(f"Name of the {coin} info channel has been reset to the default.")
+                await ctx.send(f"Name of the {coin} info voice channel has been reset to the default.")
             else:
-                await ctx.send(f"The {coin} info channel is not currently enabled.")
+                await ctx.send(f"The {coin} info voice channel is not currently enabled.")
         else:
             await self.rename_crypto_channel(ctx.guild, coin, name)
-            await ctx.send(f"Name of the {coin} info channel has been updated.")
+            await ctx.send(f"Name of the {coin} info voice channel has been updated.")
 
     async def create_crypto_channels(self, guild, coins_to_include):
-        # Existing implementation for creating crypto channels remains unchanged
+        for coin_symbol in coins_to_include:
+            if coin_symbol in self.voice_channels:
+                await self.delete_crypto_channel(guild, coin_symbol)
+            channel = await guild.create_voice_channel(coin_symbol)
+            self.voice_channels[coin_symbol] = channel
 
-        async def delete_crypto_channels(self, guild):
-        # Existing implementation for deleting all crypto channels remains unchanged
+    async def delete_crypto_channels(self, guild):
+        for coin_symbol in self.voice_channels:
+            await self.delete_crypto_channel(guild, coin_symbol)
 
-            async def delete_crypto_channel(self, guild, coin):
-            # Define a method to delete a specific crypto channel
-            # Remove the channel from the dictionary
-                if coin in self.voice_channels:
-                    channel = self.voice_channels.pop(coin)
-                await channel.delete()
-
-async def get_default_channel_name(self, coin):
-    # Define a method to retrieve the default channel name based on the coin's symbol
-    # Replace with your logic to get default channel names
-    return f"🪙 {coin} Price: N/A"
-
-async def rename_crypto_channel(self, guild, coin, name):
-    # Define a method to rename the crypto channel
-    # Update the voice channel's name to the specified name
-    if coin in self.voice_channels:
-        channel = self.voice_channels[coin]
-        await channel.edit(name=name, reason="Crypto Info Update")
-
+    async def delete_crypto_channel(self, guild, coin):
+        if coin in self.voice_channels:
+            channel = self.voice_channels.pop(coin)
+            await channel.delete()
+    
+    async def get_default_channel_name(self, coin):
+        return f"🪙 {coin} Price: N/A"
 
 def setup(bot):
     bot.add_cog(CryptoChannel(bot))
