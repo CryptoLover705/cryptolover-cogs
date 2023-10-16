@@ -5,7 +5,8 @@ from redbot.core.commands import Cog
 import requests
 
 class CryptoChannel(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers"
 
