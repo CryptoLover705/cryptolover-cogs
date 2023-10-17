@@ -1,6 +1,6 @@
 import discord
 from redbot.core import commands
-import aiohttp
+import requests
 import asyncio
 from typing import Optional
 
@@ -16,19 +16,25 @@ class CryptoChannel(commands.Cog):
             await self.update_channel_names()
             await asyncio.sleep(900)
 
+    def fetch_coin_data(self, coin_id):
+        url = self.coinpaprika_api_url.format(coin_id=coin_id)
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if 'quotes' in data and 'USD' in data['quotes']:
+                return data['quotes']['USD']['price'], data['quotes']['USD']['percent_change_24h']
+            else:
+                print(f"Invalid data format for coin ID: {coin_id}")
+        else:
+            print(f"Failed to fetch data for coin ID: {coin_id}")
+        return None, None
+
     async def update_channel_names(self):
-        async with aiohttp.ClientSession() as session:
-            for coin_id, channel in self.voice_channels.items():
-                url = f"https://api.coinpaprika.com/v1/tickers/{coin_id}"
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        symbol = data['symbol']
-                        price = data['quotes']['USD']['price']
-                        name = await self.get_channel_name_with_emoji(symbol, price)
-                        await self.rename_crypto_channel(coin_id, name)
-                    else:
-                        print(f"Failed to fetch data for coin ID: {coin_id}")
+        for coin_id, channel in self.voice_channels.items():
+            price_usd, price_change_24h = self.fetch_coin_data(coin_id)
+            if price_usd is not None and price_change_24h is not None:
+                name = await self.get_channel_name_with_emoji(coin_id, price_change_24h)
+                await self.rename_crypto_channel(coin_id, name)
 
     async def get_channel_name_with_emoji(self, coin_id, price_change_24h):
         emoji = "🟢" if price_change_24h > 0 else "🔴"
