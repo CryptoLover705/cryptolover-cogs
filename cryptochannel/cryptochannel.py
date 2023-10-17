@@ -1,43 +1,38 @@
 import discord
 from redbot.core import commands
-import requests
+import aiohttp
 import asyncio
-from typing import Optional
+import requests
 
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers/{coin_id}"
-        self.voice_channels = {}
+        self.voice_channels = {}  
 
     @commands.Cog.listener()
     async def on_ready(self):
         while True:
             await self.update_channel_names()
-            await asyncio.sleep(900)
+            await asyncio.sleep(900)  
 
-    def fetch_coin_data(self, coin_id):
-        url = self.coinpaprika_api_url.format(coin_id=coin_id)
+    async def update_channel_names(self):
+        original_coin_id = "cds-crypto-development-services"
+        url = f"https://api.coinpaprika.com/v1/tickers/{original_coin_id}"
+
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
-            if 'quotes' in data and 'USD' in data['quotes']:
-                return data['symbol'], data['quotes']['USD']['price']
-            else:
-                print(f"Invalid data format for coin ID: {coin_id}")
+            symbol = data['symbol']
+            price_change_24h = data["quotes"]["USD"]["percent_change_24h"]
+            name = await self.get_channel_name_with_emoji(symbol, price_change_24h)
+            await self.rename_crypto_channel(symbol, name)
         else:
-            print(f"Failed to fetch data for coin ID: {coin_id}")
-        return None, None
+            print("Failed to fetch data from CoinPaprika API.")
 
-    async def update_channel_names(self):
-        for coin_id, channel in self.voice_channels.items():
-            symbol, price = self.fetch_coin_data(coin_id)
-            if symbol is not None and price is not None:
-                name = await self.get_channel_name_with_emoji(symbol, price)
-                await self.rename_crypto_channel(coin_id, name)
-
-    async def get_channel_name_with_emoji(self, symbol, price):
-        return f"Symbol: {symbol}\nPrice: {price}"
+    async def get_channel_name_with_emoji(self, coin_id, price_change_24h):
+        emoji = "🟢" if price_change_24h > 0 else "🔴"
+        return f"{emoji} {coin_id} Price: N/A"
 
     async def rename_crypto_channel(self, coin_id, name):
         if coin_id in self.voice_channels:
@@ -102,7 +97,7 @@ class CryptoChannel(commands.Cog):
     async def create_crypto_channels(self, guild, coins_to_include):
         category = discord.utils.get(guild.categories, name="Crypto Channels")
         if not category:
-            category = await guild.create_category("Crypto Channels")
+            category = await guild.create_category("Crypto Channels")  
 
         for coin_symbol in coins_to_include:
             if coin_symbol in self.voice_channels:
