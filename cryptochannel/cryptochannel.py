@@ -19,13 +19,16 @@ class CryptoChannel(commands.Cog):
     async def update_channel_names(self):
         async with aiohttp.ClientSession() as session:
             for coin_id, channel in self.voice_channels.items():
-                url = self.coinpaprika_api_url.format(coin_id=coin_id)
+                url = f"https://api.coinpaprika.com/v1/tickers/{coin_id}"
                 async with session.get(url) as response:
                     if response.status == 200:
                         data = await response.json()
-                        price_change_24h = data['quotes']['USD']['percent_change_24h']
-                        name = await self.get_channel_name_with_emoji(coin_id, price_change_24h)
+                        symbol = data['symbol']
+                        price = data['quotes']['USD']['price']
+                        name = await self.get_channel_name_with_emoji(symbol, price)
                         await self.rename_crypto_channel(coin_id, name)
+                    else:
+                        print(f"Failed to fetch data for coin ID: {coin_id}")
 
     async def get_channel_name_with_emoji(self, coin_id, price_change_24h):
         emoji = "🟢" if price_change_24h > 0 else "🔴"
