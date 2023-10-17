@@ -17,26 +17,40 @@ class CryptoChannel(commands.Cog):
             await self.update_channel_names()
             await asyncio.sleep(900)  # Update every 15 minutes
 
+    async def get_coin_id(self, coin_symbol):
+        # Implement a method to map coin symbols to CoinPaprika coin IDs
+        # Example: You can fetch this mapping from a database or API
+        # For demonstration purposes, we'll use a simple dictionary.
+        coin_mapping = {
+            "bnb": "bnb-binance-coin",
+            "btc": "btc-bitcoin",
+            "cds": "cds-crypto-development-services",
+            "cst": "cst-cryptoswaptoken",
+            "eth": "eth-ethereum",
+            "ltc": "ltc-litecoin",
+            
+            # Add more coin mappings as needed
+        }
+        return coin_mapping.get(coin_symbol.lower())
+
     async def update_channel_names(self):
+        coin_symbols = ["bnb", "btc", "cds", "cst", "eth", "ltc"]  # Add more coin symbols as needed
         async with aiohttp.ClientSession() as session:
-            async with session.get(self.coinpaprika_api_url.format(coin=coin_id)) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    for coin in data:
-                        coin_id = coin["id"]
-                        if coin_id in self.voice_channels:
-                            price_change_24h = coin["quotes"]["USD"]["percent_change_24h"]
+            for coin_symbol in coin_symbols:
+                coin_id = await self.get_coin_id(coin_symbol)
+                if coin_id:
+                    async with session.get(self.coinpaprika_api_url.format(coin_id=coin_id)) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            price_change_24h = data["quotes"]["USD"]["percent_change_24h"]
                             name = await self.get_channel_name_with_emoji(coin_id, price_change_24h)
                             await self.rename_crypto_channel(coin_id, name)
 
     async def get_channel_name_with_emoji(self, coin_id, price_change_24h):
-        # Define a method to format the channel name with emojis based on price change
-        emoji = "🟢" if price_change_24h > 0 else "🔴"
+        emoji = "🟢 ⬈" if price_change_24h > 0 else "🔴 ⬊"
         return f"{emoji} {coin_id} Price: N/A"
 
     async def rename_crypto_channel(self, coin_id, name):
-        # Define a method to rename the crypto channel
-        # Update the voice channel's name to the specified name
         if coin_id in self.voice_channels:
             channel = self.voice_channels[coin_id]
             await channel.edit(name=name, reason="Crypto Info Update")
