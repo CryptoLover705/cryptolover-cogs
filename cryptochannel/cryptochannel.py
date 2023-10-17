@@ -22,7 +22,7 @@ class CryptoChannel(commands.Cog):
         if response.status_code == 200:
             data = response.json()
             if 'quotes' in data and 'USD' in data['quotes']:
-                return data['quotes']['USD']['price'], data['quotes']['USD']['percent_change_24h']
+                return data['symbol'], data['quotes']['USD']['price']
             else:
                 print(f"Invalid data format for coin ID: {coin_id}")
         else:
@@ -31,14 +31,13 @@ class CryptoChannel(commands.Cog):
 
     async def update_channel_names(self):
         for coin_id, channel in self.voice_channels.items():
-            price_usd, price_change_24h = self.fetch_coin_data(coin_id)
-            if price_usd is not None and price_change_24h is not None:
-                name = await self.get_channel_name_with_emoji(coin_id, price_change_24h)
+            symbol, price = self.fetch_coin_data(coin_id)
+            if symbol is not None and price is not None:
+                name = await self.get_channel_name_with_emoji(symbol, price)
                 await self.rename_crypto_channel(coin_id, name)
 
-    async def get_channel_name_with_emoji(self, coin_id, price_change_24h):
-        emoji = "🟢" if price_change_24h > 0 else "🔴"
-        return f"{emoji} {coin_id} Price: N/A"
+    async def get_channel_name_with_emoji(self, symbol, price):
+        return f"Symbol: {symbol}\nPrice: {price}"
 
     async def rename_crypto_channel(self, coin_id, name):
         if coin_id in self.voice_channels:
