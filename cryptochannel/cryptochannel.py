@@ -66,37 +66,42 @@ class CryptoChannel(commands.Cog):
         return cryptocurrencies
 
     @commands.command()
-    async def enable(self, ctx, input_string: str):
-        symbol, endpoint = input_string.split('-')
-        symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+    async def enable(self, ctx, endpoint: str):
+        # Set symbol to None if you don't need it
+        symbol = None
+
+        # Construct the api_endpoint using the provided endpoint
+        api_endpoint = endpoint.lower()
 
         cryptocurrencies = self.get_cryptocurrencies()
         json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
 
-        new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
-        cryptocurrencies.append(new_crypto)
+        # Check if the endpoint is already enabled
+        if any(crypto["api_endpoint"] == api_endpoint for crypto in cryptocurrencies):
+            await ctx.send(f'{api_endpoint} is already enabled for tracking')
+        else:
+            new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
+            cryptocurrencies.append(new_crypto)
 
-        with open(json_path, 'w') as file:
-            json.dump(cryptocurrencies, file, indent=4)
+            with open(json_path, 'w') as file:
+                json.dump(cryptocurrencies, file, indent=4)
 
-        await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking')
+            await ctx.send(f'Enabled {api_endpoint} for tracking')
 
     @commands.command()
-    async def disable(self, ctx, input_string: str):
-        symbol, endpoint = input_string.split('-')
-        symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+    async def disable(self, ctx, endpoint: str):
+        # Set symbol to None if you don't need it
+        symbol = None
 
         cryptocurrencies = self.get_cryptocurrencies()
         json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
 
-        updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
+        updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if crypto["api_endpoint"] != endpoint.lower()]
 
         with open(json_path, 'w') as file:
             json.dump(updated_cryptocurrencies, file, indent=4)
 
-        await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking')
+        await ctx.send(f'Disabled {endpoint} from tracking')
 
     @commands.command()
     async def cryptoreload(self, ctx, extension):
