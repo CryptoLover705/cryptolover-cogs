@@ -67,9 +67,9 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
-        symbol, endpoint = input_string
+        endpoint = input_string
         symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+        api_endpoint = f'{endpoint.lower()}'
 
         cryptocurrencies = self.get_cryptocurrencies()
         json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
@@ -84,9 +84,9 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
-        symbol, endpoint = input_string
+        endpoint = input_string
         symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+        api_endpoint = f'{endpoint.lower()}'
 
         cryptocurrencies = self.get_cryptocurrencies()
         json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
