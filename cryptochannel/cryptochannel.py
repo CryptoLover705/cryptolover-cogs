@@ -22,7 +22,7 @@ class CryptoChannel(commands.Cog):
             for channel in category.voice_channels:
                 await channel.delete()
 
-        with open('./cryptocurrencies.json', 'r') as file:
+        with open('/root/.local/share/Red-DiscordBot/data/serverassistant/cogs/CogManager/cogs/cryptochannel/cryptocurrencies.json', 'r') as file:
             cryptocurrencies = json.load(file)
 
         category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
@@ -74,12 +74,12 @@ class CryptoChannel(commands.Cog):
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        with open('cryptocurrencies.json', 'r') as file:
+        with open('/root/.local/share/Red-DiscordBot/data/serverassistant/cogs/CogManager/cogs/cryptochannel/cryptocurrencies.json', 'r') as file:
             cryptocurrencies = json.load(file)
 
         updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
 
-        with open('cryptocurrencies.json', 'w') as file:
+        with open('/root/.local/share/Red-DiscordBot/data/serverassistant/cogs/CogManager/cogs/cryptochannel/cryptocurrencies.json', 'w') as file:
             json.dump(updated_cryptocurrencies, file, indent=4)
 
         await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
