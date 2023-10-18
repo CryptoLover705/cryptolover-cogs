@@ -22,7 +22,7 @@ class CryptoChannel(commands.Cog):
             for channel in category.voice_channels:
                 await channel.delete()
 
-        with open('cryptocurrencies.json', 'r') as file:
+        with open('./cryptocurrencies.json', 'r') as file:
             cryptocurrencies = json.load(file)
 
         category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
