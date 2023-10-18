@@ -1,0 +1,26 @@
+[
+    {
+        "symbol": "CDS",
+        "api_endpoint": "cds-crypto-development-services"
+    },
+    {
+        "symbol": "BNB",
+        "api_endpoint": "bnb-binance-coin"
+    },
+    {
+        "symbol": "CST",
+        "api_endpoint": "cst-cryptoswaptoken"
+    },
+    {
+        "symbol": "BTC",
+        "api_endpoint": "btc-bitcoin"
+    },
+    {
+        "symbol": "MATIC",
+        "api_endpoint": "matic-polygon"
+    },
+    {
+        "symbol": "AVAX",
+        "api_endpoint": "avax-avalanche"
+    }
+]

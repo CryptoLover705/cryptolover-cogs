@@ -1,138 +1,96 @@
 import discord
-from redbot.core import commands
-import aiohttp
-import asyncio
-from typing import Optional
+from redbot.core import commands, tasks
+import requests
+import json
+import os
+import sys
 
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.coinpaprika_api_url = "https://api.coinpaprika.com/v1/tickers/{coin_id}"
-        self.voice_channels = {}  # A dictionary to store created voice channels
+        self.update_channels.start()
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        # Periodically update the channel names with price changes
-        while True:
-            await self.update_channel_names()
-            await asyncio.sleep(900)  # Update every 15 minutes
+    def cog_unload(self):
+        self.update_channels.cancel()
 
-    async def get_coin_id(self, coin_symbol):
-        # Implement a method to map coin symbols to CoinPaprika coin IDs
-        # Example: You can fetch this mapping from a database or API
-        # For demonstration purposes, we'll use a simple dictionary.
-        coin_mapping = {
-            "bnb": "bnb-binance-coin",
-            "btc": "btc-bitcoin",
-            "cds": "cds-crypto-development-services",
-            "cst": "cst-cryptoswaptoken",
-            "eth": "eth-ethereum",
-            "ltc": "ltc-litecoin",
-            
-            # Add more coin mappings as needed
-        }
-        return coin_mapping.get(coin_symbol.lower())
+    @tasks.loop(minutes=5)
+    async def update_channels(self):
+        guild = self.bot.guilds[0]
+        category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
+        if category:
+            for channel in category.voice_channels:
+                await channel.delete()
 
-    async def update_channel_names(self):
-        coin_symbols = ["bnb", "btc", "cds", "cst", "eth", "ltc"]  # Add more coin symbols as needed
-        async with aiohttp.ClientSession() as session:
-            for coin_symbol in coin_symbols:
-                coin_id = await self.get_coin_id(coin_symbol)
-                if coin_id:
-                    async with session.get(self.coinpaprika_api_url.format(coin_id=coin_id)) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            price_change_24h = data["quotes"]["USD"]["percent_change_24h"]
-                            name = await self.get_channel_name_with_emoji(coin_id, price_change_24h)
-                            await self.rename_crypto_channel(coin_id, name)
+        with open('cryptocurrencies.json', 'r') as file:
+            cryptocurrencies = json.load(file)
 
-    async def get_channel_name_with_emoji(self, coin_id, price_change_24h):
-        emoji = "🟢 ⬈" if price_change_24h > 0 else "🔴 ⬊"
-        return f"{emoji} {coin_id} Price: N/A"
+        category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
+        if category is None:
+            category = await guild.create_category('Cryptocurrency Prices', reason='Initial Category Creation')
 
-    async def rename_crypto_channel(self, coin_id, name):
-        if coin_id in self.voice_channels:
-            channel = self.voice_channels[coin_id]
-            await channel.edit(name=name, reason="Crypto Info Update")
+        for crypto in cryptocurrencies:
+            symbol = crypto["symbol"]
+            api_endpoint = crypto["api_endpoint"]
+            url = f'https://api.coinpaprika.com/v1/tickers/{api_endpoint}'
+            response = requests.get(url)
+            data = response.json() if response.status_code == 200 else None
+            price_usd = data['quotes']['USD']['price'] if data else None
+            percent_change_24h = data['quotes']['USD']['percent_change_24h'] if data else None
+            if price_usd is not None and percent_change_24h is not None:
+                price_usd_formatted = '{:.2f}'.format(price_usd)
+                emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
+                percent_change_formatted = '{:.4f}%'.format(percent_change_24h)
+                channel_name = f'{symbol}: {emoji} ${price_usd_formatted} ({percent_change_formatted})'
+            else:
+                channel_name = f'{symbol}: Data Unavailable'
+            new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
+            print(f'Created voice channel: {symbol}: {channel_name}')
+
+    @update_channels.before_loop
+    async def before_update_channels(self):
+        await self.bot.wait_until_ready()
 
     @commands.command()
-    async def cryptochannel(self, ctx, action: str, *coins_to_include: str):
-        if action == "enable":
-            if not coins_to_include:
-                await ctx.send("You need to specify at least one cryptocurrency symbol or ID to include.")
-                return
-            await self.create_crypto_channels(ctx.guild, coins_to_include)
-            await ctx.send("Crypto info voice channels have been enabled for the specified coins.")
-        elif action == "disable":
-            await self.delete_crypto_channels(ctx.guild)
-            await ctx.send("Crypto info voice channels have been disabled.")
-        else:
-            await ctx.send("Invalid action. Use 'enable' or 'disable'.")
+    async def enable(self, ctx, input_string: str):
+        symbol, endpoint = input_string.split('-')
+        symbol = symbol.upper()
+        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-    @commands.command(name="cryptolist")
-    async def _cryptochannel_list(self, ctx):
-        enabled_channels = list(self.voice_channels.keys())
-        if enabled_channels:
-            enabled_channels_list = "\n".join(enabled_channels)
-            await ctx.send(f"Enabled cryptocurrency info voice channels:\n{enabled_channels_list}")
-        else:
-            await ctx.send("No cryptocurrency info voice channels are currently enabled.")
+        with open('cryptocurrencies.json', 'r') as file:
+            cryptocurrencies = json.load(file)
 
-    @commands.command(name="togglechannel")
-    async def _cryptochannel_togglechannel(self, ctx, coin: str, enabled: Optional[bool] = None):
-        coin = coin.lower()
-        if enabled is None:
-            enabled = not self.voice_channels.get(coin)
-        
-        if enabled:
-            if coin not in self.voice_channels:
-                await self.create_crypto_channels(ctx.guild, [coin])
-            await ctx.send(f"Crypto info voice channel for {coin} has been enabled.")
-        else:
-            if coin in self.voice_channels:
-                await self.delete_crypto_channel(ctx.guild, coin)
-                await ctx.send(f"Crypto info voice channel for {coin} has been disabled.")
+        new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
+        cryptocurrencies.append(new_crypto)
+
+        with open('cryptocurrencies.json', 'w') as file:
+            json.dump(cryptocurrencies, file, indent=4)
+
+        await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking.')
+
+    @commands.command()
+    async def disable(self, ctx, input_string: str):
+        symbol, endpoint = input_string.split('-')
+        symbol = symbol.upper()
+        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+
+        with open('cryptocurrencies.json', 'r') as file:
+            cryptocurrencies = json.load(file)
+
+        updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
+
+        with open('cryptocurrencies.json', 'w') as file:
+            json.dump(updated_cryptocurrencies, file, indent=4)
+
+        await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
+
+    @commands.command()
+    async def reload(self, ctx, extension):
+        try:
+            if extension not in self.bot.extensions:
+                self.bot.load_extension(extension)
             else:
-                await ctx.send(f"Crypto info voice channel for {coin} is not currently enabled.")
+                self.bot.reload_extension(extension)
+            await ctx.send(f"Reloaded extension: {extension}")
+        except commands.ExtensionError as error:
+            await ctx.send(f"Failed to reload extension {extension}: {error}")
 
-    @commands.command(name="name")
-    async def _cryptochannel_name(self, ctx, coin: str, *, name=None):
-        coin = coin.lower()
-        
-        if name is None:
-            if coin in self.voice_channels:
-                default_name = await self.get_default_channel_name(coin)
-                await self.rename_crypto_channel(ctx.guild, coin, default_name)
-                await ctx.send(f"Name of the {coin} info voice channel has been reset to the default.")
-            else:
-                await ctx.send(f"The {coin} info voice channel is not currently enabled.")
-        else:
-            await self.rename_crypto_channel(ctx.guild, coin, name)
-            await ctx.send(f"Name of the {coin} info voice channel has been updated.")
-
-    async def create_crypto_channels(self, guild, coins_to_include):
-        category = discord.utils.get(guild.categories, name="Crypto Channels")
-        if not category:
-            category = await guild.create_category("Crypto Channels")  # Create the category if it doesn't exist
-
-        for coin_symbol in coins_to_include:
-            if coin_symbol in self.voice_channels:
-                await self.delete_crypto_channel(guild, coin_symbol)
-            # Create the voice channel inside the category with user_limit set to 0
-            channel = await guild.create_voice_channel(coin_symbol, category=category, user_limit=0)
-            self.voice_channels[coin_symbol] = channel
-
-    async def delete_crypto_channels(self, guild):
-        for coin_symbol in self.voice_channels:
-            await self.delete_crypto_channel(guild, coin_symbol)
-
-    async def delete_crypto_channel(self, guild, coin):
-        if coin in self.voice_channels:
-            channel = self.voice_channels.pop(coin)
-            await channel.delete()
-    
-    async def get_default_channel_name(self, coin):
-        return f"🪙 {coin} Price: N/A"
-
-def setup(bot):
-    bot.add_cog(CryptoChannel(bot))
