@@ -67,7 +67,7 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
-        symbol, endpoint = input_string.split('-')
+        symbol, endpoint = input_string#.split('-')
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
@@ -84,7 +84,7 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
-        symbol, endpoint = input_string.split('-')
+        symbol, endpoint = input_string#.split('-')
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
