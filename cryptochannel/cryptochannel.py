@@ -85,7 +85,7 @@ class CryptoChannel(commands.Cog):
         await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
 
     @commands.command()
-    async def reload(self, ctx, extension):
+    async def cryptoreload(self, ctx, extension):
         try:
             if extension not in self.bot.extensions:
                 self.bot.load_extension(extension)
