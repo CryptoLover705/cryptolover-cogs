@@ -35,17 +35,26 @@ class CryptoChannel(commands.Cog):
             symbol = crypto["symbol"]
             api_endpoint = crypto["api_endpoint"]
             url = f'https://api.coinpaprika.com/v1/tickers/{api_endpoint}'
-            response = requests.get(url)
-            data = response.json() if response.status_code == 200 else None
-            price_usd = data['quotes']['USD']['price'] if data else None
-            percent_change_24h = data['quotes']['USD']['percent_change_24h'] if data else None
-            if price_usd is not None and percent_change_24h is not None:
+
+            try:
+                response = requests.get(url)
+                response.raise_for_status()  # Raise an error if the response is not successful
+
+                data = response.json()
+                price_usd = data['quotes']['USD']['price']
+                percent_change_24h = data['quotes']['USD']['percent_change_24h']
+
                 price_usd_formatted = '{:.2f}'.format(price_usd)
                 emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
                 percent_change_formatted = '{:.4f}%'.format(percent_change_24h)
                 channel_name = f'{symbol}: {emoji} ${price_usd_formatted} ({percent_change_formatted})'
-            else:
-                channel_name = f'{symbol}: Data Unavailable'
+            except requests.RequestException as e:
+                # Handle API request errors
+                channel_name = f'{symbol}: Data Unavailable (Error: {e})'
+            except json.JSONDecodeError as e:
+                # Handle JSON decoding errors
+                channel_name = f'{symbol}: Data Unavailable (Error: {e})'
+
             new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
             print(f'Created voice channel: {symbol}: {channel_name}')
 
@@ -67,36 +76,57 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
-        symbol, endpoint = input_string.split('-')
-        symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+        try:
+            symbol, endpoint = input_string.split('-')
+            symbol = symbol.upper()
+            api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        cryptocurrencies = self.get_cryptocurrencies()
-        json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
+            cryptocurrencies = self.get_cryptocurrencies()
+            json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
 
-        new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
-        cryptocurrencies.append(new_crypto)
+            response = requests.get(f'https://api.coinpaprika.com/v1/tickers/{api_endpoint}')
+            response.raise_for_status()  # Raise an error if the response is not successful
 
-        with open(json_path, 'w') as file:
-            json.dump(cryptocurrencies, file, indent=4)
+            data = response.json()
+            price_usd = data['quotes']['USD']['price']
+            percent_change_24h = data['quotes']['USD']['percent_change_24h']
 
-        await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking')
+            price_usd_formatted = '{:.2f}'.format(price_usd)
+            emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
+            percent_change_formatted = '{:.4f}%'.format(percent_change_24h)
+            channel_name = f'{symbol}: {emoji} ${price_usd_formatted} ({percent_change_formatted})'
+
+            new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
+            cryptocurrencies.append(new_crypto)
+
+            with open(json_path, 'w') as file:
+                json.dump(cryptocurrencies, file, indent=4)
+
+            await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking')
+        except (ValueError, requests.RequestException, json.JSONDecodeError) as e:
+            # Handle and log any exceptions that occur
+            print(f"An error occurred while enabling: {e}")
+            await ctx.send('An error occurred while enabling the cryptocurrency.')
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
-        symbol, endpoint = input_string.split('-')
-        symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+        try:
+            symbol, endpoint = input_string.split('-')
+            symbol = symbol.upper()
+            api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        cryptocurrencies = self.get_cryptocurrencies()
-        json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
+            cryptocurrencies = self.get_cryptocurrencies()
+            json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
 
-        updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
+            updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
 
-        with open(json_path, 'w') as file:
-            json.dump(updated_cryptocurrencies, file, indent=4)
+            with open(json_path, 'w') as file:
+                json.dump(updated_cryptocurrencies, file, indent=4)
 
-        await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking')
+            await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking')
+        except ValueError:
+            # Handle the case where the input format is invalid
+            await ctx.send('Invalid input format. Please use symbol-endpoint format.')
 
     @commands.command()
     async def cryptoreload(self, ctx, extension):
