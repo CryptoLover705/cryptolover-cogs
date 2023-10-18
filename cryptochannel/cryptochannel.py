@@ -11,6 +11,9 @@ class CryptoChannel(commands.Cog):
         self.bot = bot
         self.update_channels.start()
 
+        # Get the path to the directory where this script is located
+        self.cog_directory = os.path.dirname(os.path.abspath(__file__))
+
     def cog_unload(self):
         self.update_channels.cancel()
 
@@ -22,8 +25,7 @@ class CryptoChannel(commands.Cog):
             for channel in category.voice_channels:
                 await channel.delete()
 
-        with open('/root/.local/share/Red-DiscordBot/data/serverassistant/cogs/CogManager/cogs/cryptochannel/cryptocurrencies.json', 'r') as file:
-            cryptocurrencies = json.load(file)
+        cryptocurrencies = self.get_cryptocurrencies()
 
         category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
         if category is None:
@@ -51,22 +53,34 @@ class CryptoChannel(commands.Cog):
     async def before_update_channels(self):
         await self.bot.wait_until_ready()
 
+    def get_cryptocurrencies(self):
+        # Use os.path.join to construct the full path to cryptocurrencies.json
+        json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
+        try:
+            with open(json_path, 'r') as file:
+                cryptocurrencies = json.load(file)
+        except FileNotFoundError:
+            # Handle the case where cryptocurrencies.json doesn't exist
+            cryptocurrencies = []
+
+        return cryptocurrencies
+
     @commands.command()
     async def enable(self, ctx, input_string: str):
         symbol, endpoint = input_string.split('-')
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        with open('cryptocurrencies.json', 'r') as file:
-            cryptocurrencies = json.load(file)
+        cryptocurrencies = self.get_cryptocurrencies()
+        json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
 
         new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
         cryptocurrencies.append(new_crypto)
 
-        with open('cryptocurrencies.json', 'w') as file:
+        with open(json_path, 'w') as file:
             json.dump(cryptocurrencies, file, indent=4)
 
-        await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking.')
+        await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking')
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
@@ -74,15 +88,15 @@ class CryptoChannel(commands.Cog):
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        with open('/root/.local/share/Red-DiscordBot/data/serverassistant/cogs/CogManager/cogs/cryptochannel/cryptocurrencies.json', 'r') as file:
-            cryptocurrencies = json.load(file)
+        cryptocurrencies = self.get_cryptocurrencies()
+        json_path = os.path.join(self.cog_directory, 'cryptocurrencies.json')
 
         updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
 
-        with open('/root/.local/share/Red-DiscordBot/data/serverassistant/cogs/CogManager/cogs/cryptochannel/cryptocurrencies.json', 'w') as file:
+        with open(json_path, 'w') as file:
             json.dump(updated_cryptocurrencies, file, indent=4)
 
-        await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
+        await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking')
 
     @commands.command()
     async def cryptoreload(self, ctx, extension):
@@ -94,4 +108,3 @@ class CryptoChannel(commands.Cog):
             await ctx.send(f"Reloaded extension: {extension}")
         except commands.ExtensionError as error:
             await ctx.send(f"Failed to reload extension {extension}: {error}")
-
