@@ -71,13 +71,22 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def assign_server(self, ctx):
-    # Store the Guild ID for this server
+        # Store the Guild ID for this server
         guild_id = ctx.guild.id
-        self.guild_ids.append({"guild_id": str(guild_id)})
-        await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
-
-        # Save the server IDs to servers.json
-        save_server_ids(self.guild_ids)
+        
+        # Load the server data from servers.json
+        server_data = load_server_ids()
+        
+        # Check if the guild ID is already in the server data
+        if str(guild_id) in server_data:
+            await ctx.send(f'This server is already assigned to Guild ID: {ctx.guild.id}')
+        else:
+            # Add the guild ID to the server data
+            server_data.append({"guild_id": str(guild_id)})
+            
+            # Save the updated server data back to servers.json
+            save_server_ids(server_data)
+            await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
