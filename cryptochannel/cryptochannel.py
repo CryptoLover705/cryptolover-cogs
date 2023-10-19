@@ -129,7 +129,7 @@ class CryptoChannel(commands.Cog):
             with open(json_file_path, 'r') as file:
                 cryptocurrencies = json.load(file)
 
-            updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol)] #and crypto["api_endpoint"] == api_endpoint)]
+            updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
 
             with open(json_file_path, 'w') as file:
                 json.dump(updated_cryptocurrencies, file, indent=4)
