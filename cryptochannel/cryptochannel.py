@@ -86,16 +86,24 @@ class CryptoChannel(commands.Cog):
             symbol = symbol.upper()
             api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-            guild_id = self.guild_ids.get(ctx.guild.id)
-            if guild_id is None:
-                await ctx.send("Bot not assigned to a server.")
-                return
+            # Get the guild ID
+            guild_id = ctx.guild.id
 
-            if guild_id not in self.enabled_cryptos:
-                self.enabled_cryptos[guild_id] = []
+            # Load the server data from servers.json
+            server_data = load_server_ids()
 
-            if symbol not in self.enabled_cryptos[guild_id]:
-                self.enabled_cryptos[guild_id].append(symbol)
+            # Check if the guild is already in the server data
+            if guild_id not in server_data:
+                server_data[guild_id] = {
+                    "enabled_currencies": []
+                }
+
+            # Check if the symbol is not already enabled for this guild
+            if symbol not in server_data[guild_id]["enabled_currencies"]:
+                server_data[guild_id]["enabled_currencies"].append(symbol)
+
+                # Save the updated server data back to servers.json
+                save_server_ids(server_data)
 
                 with open(json_file_path, 'r') as file:
                     cryptocurrencies = json.load(file)
@@ -110,38 +118,40 @@ class CryptoChannel(commands.Cog):
             else:
                 await ctx.send(f'{symbol}-{api_endpoint} is already enabled.')
         else:
-            await ctx.send("Invalid input format. Use 'enable symbol-endpoint'.")
+            await ctx.send("Invalid input format. Use 'enable symbol-endpoint.'")
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
-        if ctx.guild.id not in self.guild_ids:
-            await ctx.send("Bot not assigned to a server.")
-            return
+        if "-" in input_string:
+            symbol, endpoint = input_string.split('-', 1)
+            symbol = symbol.upper()
+            api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        symbol, endpoint = input_string.split('-')
-        symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+            # Get the guild ID
+            guild_id = ctx.guild.id
 
-        guild_id = self.guild_ids[ctx.guild.id]
+            # Load the server data from servers.json
+            server_data = load_server_ids()
 
-        if guild_id not in self.enabled_cryptos:
-            await ctx.send("No cryptocurrencies are enabled for this server.")
-            return
+            if guild_id in server_data and symbol in server_data[guild_id]["enabled_currencies"]:
+                server_data[guild_id]["enabled_currencies"].remove(symbol)
 
-        if symbol in self.enabled_cryptos[guild_id]:
-            self.enabled_cryptos[guild_id].remove(symbol)
+                # Save the updated server data back to servers.json
+                save_server_ids(server_data)
 
-            with open(json_file_path, 'r') as file:
-                cryptocurrencies = json.load(file)
+                with open(json_file_path, 'r') as file:
+                    cryptocurrencies = json.load(file)
 
-            updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
+                updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
 
-            with open(json_file_path, 'w') as file:
-                json.dump(updated_cryptocurrencies, file, indent=4)
+                with open(json_file_path, 'w') as file:
+                    json.dump(updated_cryptocurrencies, file, indent=4)
 
-            await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
+                await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
+            else:
+                await ctx.send(f'{symbol}-{api_endpoint} is not enabled for this server.')
         else:
-            await ctx.send(f'{symbol}-{api_endpoint} is not enabled for this server.')
+            await ctx.send("Invalid input format. Use 'disable symbol-endpoint.'")
 
 # Add these two functions for saving and loading server IDs
 
