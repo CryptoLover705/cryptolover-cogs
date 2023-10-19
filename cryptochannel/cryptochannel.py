@@ -31,16 +31,11 @@ class CryptoChannel(commands.Cog):
                 continue
 
             category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
-            if category:
-                # Delete all existing voice channels in the category
-                for channel in category.voice_channels:
-                    await channel.delete()
+            if category is None:
+                category = await guild.create_category('Cryptocurrency Prices', reason='Initial Category Creation')
 
             with open(json_file_path, 'r') as file:
                 cryptocurrencies = json.load(file)
-
-            if category is None:
-                category = await guild.create_category('Cryptocurrency Prices', reason='Initial Category Creation')
 
             for crypto in cryptocurrencies:
                 if crypto["symbol"] in enabled_cryptos:
@@ -49,9 +44,9 @@ class CryptoChannel(commands.Cog):
                     url = f'https://api.coinpaprika.com/v1/tickers/{api_endpoint}'
                     response = requests.get(url)
                     data = response.json() if response.status_code == 200 else None
-                    price_usd = data['quotes']['USD']['price'] if data else None
-                    percent_change_24h = data['quotes']['USD']['percent_change_24h'] if data else None
-                    if price_usd is not None and percent_change_24h is not None:
+                    if data:
+                        price_usd = data['quotes']['USD']['price']
+                        percent_change_24h = data['quotes']['USD']['percent_change_24h']
                         price_usd_formatted = '{:.2f}'.format(price_usd)
                         emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
                         channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
@@ -59,8 +54,15 @@ class CryptoChannel(commands.Cog):
                             channel_name = channel_name[:97] + "..."
                     else:
                         channel_name = f'{symbol}: Data Unavailable'
-                    new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
-                    print(f'Created voice channel: {symbol}: {channel_name}')
+
+                    # Check if the channel already exists
+                    existing_channel = discord.utils.get(category.voice_channels, name=channel_name)
+                    if existing_channel:
+                        await existing_channel.edit(name=channel_name, reason='Update Channel')
+                        print(f'Updated voice channel: {symbol}: {channel_name}')
+                    else:
+                        new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
+                        print(f'Created voice channel: {symbol}: {channel_name}')
 
     @update_channels.before_loop
     async def before_update_channels(self):
@@ -135,3 +137,5 @@ class CryptoChannel(commands.Cog):
             await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
         else:
             await ctx.send(f'{symbol}-{api_endpoint} is not enabled for this server.')
+
+bot.add_cog(CryptoChannel(bot))
