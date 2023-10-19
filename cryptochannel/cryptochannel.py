@@ -23,45 +23,44 @@ class CryptoChannel(commands.Cog):
         self.update_channels.cancel()
 
     @tasks.loop(minutes=5)
-async def update_channels(self):
-    for guild_id, enabled_cryptos in self.enabled_cryptos.items():
-        guild = self.bot.get_guild(guild_id)
+    async def update_channels(self):
+        for guild_id, enabled_cryptos in self.enabled_cryptos.items():
+            guild = self.bot.get_guild(guild_id)
 
-        if guild is None:
-            continue
+            if guild is None:
+                continue
 
-        category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
-        if category:
-            # Delete all existing voice channels in the category
-            for channel in category.voice_channels:
-                await channel.delete()
+            category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
+            if category:
+                # Delete all existing voice channels in the category
+                for channel in category.voice_channels:
+                    await channel.delete()
 
-        with open(json_file_path, 'r') as file:
-            cryptocurrencies = json.load(file)
+            with open(json_file_path, 'r') as file:
+                cryptocurrencies = json.load(file)
 
-        if category is None:
-            category = await guild.create_category('Cryptocurrency Prices', reason='Initial Category Creation')
+            if category is None:
+                category = await guild.create_category('Cryptocurrency Prices', reason='Initial Category Creation')
 
-        for crypto in cryptocurrencies:
-            if crypto["symbol"] in enabled_cryptos:
-                symbol = crypto["symbol"]
-                api_endpoint = crypto["api_endpoint"]
-                url = f'https://api.coinpaprika.com/v1/tickers/{api_endpoint}'
-                response = requests.get(url)
-                data = response.json() if response.status_code == 200 else None
-                price_usd = data['quotes']['USD']['price'] if data else None
-                percent_change_24h = data['quotes']['USD']['percent_change_24h'] if data else None
-                if price_usd is not None and percent_change_24h is not None:
-                    price_usd_formatted = '{:.2f}'.format(price_usd)
-                    emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
-                    percent_change_formatted = '{:.4f}%'.format(percent_change_24h)
-                    channel_name = f'{symbol}: {emoji} ${price_usd_formatted} ({percent_change_formatted})'
-                    if len(channel_name) > 100:
-                        channel_name = channel_name[:97] + "..."
-                else:
-                    channel_name = f'{symbol}: Data Unavailable'
-                new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
-                print(f'Created voice channel: {symbol}: {channel_name}')
+            for crypto in cryptocurrencies:
+                if crypto["symbol"] in enabled_cryptos:
+                    symbol = crypto["symbol"]
+                    api_endpoint = crypto["api_endpoint"]
+                    url = f'https://api.coinpaprika.com/v1/tickers/{api_endpoint}'
+                    response = requests.get(url)
+                    data = response.json() if response.status_code == 200 else None
+                    price_usd = data['quotes']['USD']['price'] if data else None
+                    percent_change_24h = data['quotes']['USD']['percent_change_24h'] if data else None
+                    if price_usd is not None and percent_change_24h is not None:
+                        price_usd_formatted = '{:.2f}'.format(price_usd)
+                        emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
+                        channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
+                        if len(channel_name) > 100:
+                            channel_name = channel_name[:97] + "..."
+                    else:
+                        channel_name = f'{symbol}: Data Unavailable'
+                    new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
+                    print(f'Created voice channel: {symbol}: {channel_name}')
 
     @update_channels.before_loop
     async def before_update_channels(self):
