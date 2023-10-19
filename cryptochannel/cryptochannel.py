@@ -48,7 +48,10 @@ class CryptoChannel(commands.Cog):
                 price_usd_formatted = '{:.2f}'.format(price_usd)
                 emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
                 percent_change_formatted = '{:.4f}%'.format(percent_change_24h)
+                # Ensure the channel name does not exceed 100 characters
                 channel_name = f'{symbol}: {emoji} ${price_usd_formatted} ({percent_change_formatted})'
+                if len(channel_name) > 100:
+                    channel_name = channel_name[:97] + "..."
             else:
                 channel_name = f'{symbol}: Data Unavailable'
             new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
