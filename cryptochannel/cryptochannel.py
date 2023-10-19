@@ -78,15 +78,15 @@ class CryptoChannel(commands.Cog):
         server_data = load_server_ids()
         
         # Check if the guild ID is already in the server data
-        if str(guild_id) in server_data:
-            await ctx.send(f'This server is already assigned to Guild ID: {ctx.guild.id}')
-        else:
+        if not any(d['guild_id'] == str(guild_id) for d in server_data):
             # Add the guild ID to the server data
             server_data.append({"guild_id": str(guild_id)})
             
             # Save the updated server data back to servers.json
             save_server_ids(server_data)
             await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
+        else:
+            await ctx.send(f'This server is already assigned to Guild ID: {ctx.guild.id}')
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
@@ -103,9 +103,10 @@ class CryptoChannel(commands.Cog):
 
             # Check if the guild is already in the server data
             if guild_id not in server_data:
-                server_data[guild_id] = {
+                server_data.append({
+                    "guild_id": str(guild_id),
                     "enabled_currencies": []
-                }
+                })
 
             # Check if the symbol is not already enabled for this guild
             if symbol not in server_data[guild_id]["enabled_currencies"]:
