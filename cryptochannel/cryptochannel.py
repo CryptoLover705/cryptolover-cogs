@@ -75,34 +75,36 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
-        if ctx.guild.id not in self.guild_ids:
-            await ctx.send("Bot not assigned to a server.")
-            return
+        if "-" in input_string:
+            symbol, endpoint = input_string.split('-', 1)  # Use 'split' with maxsplit parameter to avoid splitting on additional hyphens
+            symbol = symbol.upper()
+            api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        symbol, endpoint = input_string.split('-')
-        symbol = symbol.upper()
-        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+            guild_id = self.guild_ids.get(ctx.guild.id)
+            if guild_id is None:
+                await ctx.send("Bot not assigned to a server.")
+                return
 
-        guild_id = self.guild_ids[ctx.guild.id]
+            if guild_id not in self.enabled_cryptos:
+                self.enabled_cryptos[guild_id] = []
 
-        if guild_id not in self.enabled_cryptos:
-            self.enabled_cryptos[guild_id] = []
+            if symbol not in self.enabled_cryptos[guild_id]:
+                self.enabled_cryptos[guild_id].append(symbol)
 
-        if symbol not in self.enabled_cryptos[guild_id]:
-            self.enabled_cryptos[guild_id].append(symbol)
+                with open(json_file_path, 'r') as file:
+                    cryptocurrencies = json.load(file)
 
-            with open(json_file_path, 'r') as file:
-                cryptocurrencies = json.load(file)
+                new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
+                cryptocurrencies.append(new_crypto)
 
-            new_crypto = {"symbol": symbol, "api_endpoint": api_endpoint}
-            cryptocurrencies.append(new_crypto)
+                with open(json_file_path, 'w') as file:
+                    json.dump(cryptocurrencies, file, indent=4)
 
-            with open(json_file_path, 'w') as file:
-                json.dump(cryptocurrencies, file, indent=4)
-
-            await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking.')
+                await ctx.send(f'Enabled {symbol}-{api_endpoint} for tracking.')
+            else:
+                await ctx.send(f'{symbol}-{api_endpoint} is already enabled.')
         else:
-            await ctx.send(f'{symbol}-{api_endpoint} is already enabled.')
+            await ctx.send("Invalid input format. Use 'enable symbol-endpoint'.")
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
