@@ -74,7 +74,7 @@ class CryptoChannel(commands.Cog):
 
         guild_id = ctx.guild.id
         if guild_id not in self.enabled_cryptos:
-            self.enabled_cryptos[guild_id] = []
+            self.enabled_cryptos[guild_id] = [1161408772888080414]
 
         if symbol not in self.enabled_cryptos[guild_id]:
             self.enabled_cryptos[guild_id].append(symbol)
