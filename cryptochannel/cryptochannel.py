@@ -91,7 +91,7 @@ class CryptoChannel(commands.Cog):
     @commands.command()
     async def enable(self, ctx, input_string: str):
         if "-" in input_string:
-            symbol, endpoint = input_string.split('-', 1)  # Use 'split' with maxsplit parameter to avoid splitting on additional hyphens
+            symbol, endpoint = input_string.split('-', 1)
             symbol = symbol.upper()
             api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
@@ -101,16 +101,16 @@ class CryptoChannel(commands.Cog):
             # Load the server data from servers.json
             server_data = load_server_ids()
 
-            # Check if the guild is already in the server data
-            if guild_id not in server_data:
+            # Check if the guild is already in the server data or initialize it if it's not
+            if not any(d['guild_id'] == str(guild_id) for d in server_data):
                 server_data.append({
                     "guild_id": str(guild_id),
                     "enabled_currencies": []
                 })
 
             # Check if the symbol is not already enabled for this guild
-            if symbol not in server_data[guild_id]["enabled_currencies"]:
-                server_data[guild_id]["enabled_currencies"].append(symbol)
+            if symbol not in [c for d in server_data if 'guild_id' in d and d['guild_id'] == str(guild_id) for c in d["enabled_currencies"]]:
+                [d for d in server_data if 'guild_id' in d and d['guild_id'] == str(guild_id)][0]["enabled_currencies"].append(symbol)
 
                 # Save the updated server data back to servers.json
                 save_server_ids(server_data)
@@ -129,6 +129,7 @@ class CryptoChannel(commands.Cog):
                 await ctx.send(f'{symbol}-{api_endpoint} is already enabled.')
         else:
             await ctx.send("Invalid input format. Use 'enable symbol-endpoint.'")
+
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
