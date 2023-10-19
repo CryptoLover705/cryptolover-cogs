@@ -17,6 +17,7 @@ class CryptoChannel(commands.Cog):
         self.bot = bot
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
+        self.guild_ids = {}  # Dictionary to store the Guild ID for each server
 
     def cog_unload(self):
         self.update_channels.cancel()
@@ -67,14 +68,25 @@ class CryptoChannel(commands.Cog):
         await self.bot.wait_until_ready()
 
     @commands.command()
+    async def assign_server(self, ctx):
+        # Store the Guild ID for this server
+        self.guild_ids[ctx.guild.id] = ctx.guild.id
+        await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
+
+    @commands.command()
     async def enable(self, ctx, input_string: str):
+        if ctx.guild.id not in self.guild_ids:
+            await ctx.send("Bot not assigned to a server.")
+            return
+
         symbol, endpoint = input_string.split('-')
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        guild_id = ctx.guild.id
+        guild_id = self.guild_ids[ctx.guild.id]
+
         if guild_id not in self.enabled_cryptos:
-            self.enabled_cryptos[guild_id] = [1161408772888080414]
+            self.enabled_cryptos[guild_id] = []
 
         if symbol not in self.enabled_cryptos[guild_id]:
             self.enabled_cryptos[guild_id].append(symbol)
@@ -94,13 +106,19 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
+        if ctx.guild.id not in self.guild_ids:
+            await ctx.send("Bot not assigned to a server.")
+            return
+
         symbol, endpoint = input_string.split('-')
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-        guild_id = ctx.guild.id
+        guild_id = self.guild_ids[ctx.guild.id]
+
         if guild_id not in self.enabled_cryptos:
-            self.enabled_cryptos[guild_id] = []
+            await ctx.send("No cryptocurrencies are enabled for this server.")
+            return
 
         if symbol in self.enabled_cryptos[guild_id]:
             self.enabled_cryptos[guild_id].remove(symbol)
@@ -115,4 +133,4 @@ class CryptoChannel(commands.Cog):
 
             await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
         else:
-            await ctx.send(f'{symbol}-{api_endpoint} is not enabled.')
+            await ctx.send(f'{symbol}-{api_endpoint} is not enabled for this server.')
