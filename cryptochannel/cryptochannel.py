@@ -49,7 +49,7 @@ class CryptoChannel(commands.Cog):
                         price_usd = data['quotes']['USD']['price']
                         percent_change_24h = data['quotes']['USD']['percent_change_24h']
                         price_usd_formatted = '{:.2f}'.format(price_usd)
-                        emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
+                        emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
                         channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
                         if len(channel_name) > 100:
                             channel_name = channel_name[:97] + "..."
@@ -71,22 +71,13 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def assign_server(self, ctx):
-        # Store the Guild ID for this server
+    # Store the Guild ID for this server
         guild_id = ctx.guild.id
-        
-        # Load the server data from servers.json
-        server_data = load_server_ids()
-        
-        # Check if the guild ID is already in the server data
-        if not any(d['guild_id'] == str(guild_id) for d in server_data):
-            # Add the guild ID to the server data
-            server_data.append({"guild_id": str(guild_id)})
-            
-            # Save the updated server data back to servers.json
-            save_server_ids(server_data)
-            await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
-        else:
-            await ctx.send(f'This server is already assigned to Guild ID: {ctx.guild.id}')
+        self.guild_ids.append({"guild_id": str(guild_id)})
+        await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
+
+        # Save the server IDs to servers.json
+        save_server_ids(self.guild_ids)
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
