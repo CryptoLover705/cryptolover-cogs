@@ -49,21 +49,26 @@ class CryptoChannel(commands.Cog):
                         price_usd = data['quotes']['USD']['price']
                         percent_change_24h = data['quotes']['USD']['percent_change_24h']
                         price_usd_formatted = '{:.2f}'.format(price_usd)
-                        emoji = "🟢⭎" if percent_change_24h > 0 else "🔴⭏"
-                        channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
-                        if len(channel_name) > 100:
-                            channel_name = channel_name[:97] + "..."
+                        emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
+                        new_channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
+                        if len(new_channel_name) > 100:
+                            new_channel_name = new_channel_name[:97] + "..."
                     else:
-                        channel_name = f'{symbol}: Data Unavailable'
+                        new_channel_name = f'{symbol}: Data Unavailable'
 
-                    # Check if the channel already exists
-                    existing_channel = discord.utils.get(category.voice_channels, name=channel_name)
+                    # Check if a channel with the cryptocurrency symbol exists
+                    existing_channel = discord.utils.get(category.voice_channels, name=lambda n: n.startswith(f'{symbol}:'))
+
                     if existing_channel:
-                        await existing_channel.edit(name=channel_name, reason='Update Channel')
-                        print(f'Updated voice channel: {symbol}: {channel_name}')
+                        if existing_channel.name != new_channel_name:
+                            # Update the existing channel's name
+                            await existing_channel.edit(name=new_channel_name, reason='Update Channel')
+                            print(f'Updated voice channel: {symbol}: {new_channel_name}')
                     else:
-                        new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
-                        print(f'Created voice channel: {symbol}: {channel_name}')
+                        # Create a new channel with the new name
+                        new_channel = await category.create_voice_channel(name=new_channel_name, reason='Initial Creation')
+                        print(f'Created voice channel: {symbol}: {new_channel_name}')
+
 
     @update_channels.before_loop
     async def before_update_channels(self):
