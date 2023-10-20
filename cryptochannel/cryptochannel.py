@@ -111,7 +111,7 @@ class CryptoChannel(commands.Cog):
 
             # Check if the symbol is not already enabled for this guild
             if symbol not in [c for d in server_data if 'guild_id' in d and d['guild_id'] == str(guild_id) for c in d["enabled_currencies"]]:
-                [d for d in server_data if 'guild_id' in d and d['guild_id'] == str(guild_id)][0]["enabled_currencies"].append(symbol)
+                [d for d in server_data if 'guild_id' in d and d['guild_id'] == str(guild_id)][0]["enabled_currencies"].append(symbol)-(endpoint.lower)
 
                 # Save the updated server data back to servers.json
                 save_server_ids(server_data)
@@ -146,7 +146,7 @@ class CryptoChannel(commands.Cog):
             server_data = load_server_ids()
 
             if guild_id in server_data and symbol in server_data[guild_id]["enabled_currencies"]:
-                server_data[guild_id]["enabled_currencies"].remove(symbol)
+                server_data[guild_id]["enabled_currencies"].remove(symbol)-(endpoint.lower)
 
                 # Save the updated server data back to servers.json
                 save_server_ids(server_data)
