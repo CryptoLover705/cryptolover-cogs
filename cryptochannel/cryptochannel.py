@@ -62,9 +62,8 @@ class CryptoChannel(commands.Cog):
                         await existing_channel.edit(name=channel_name, reason='Update Channel')
                         print(f'Updated voice channel: {symbol}: {channel_name}')
                     else:
-                        print(f'Before creating new channel: {symbol}: {channel_name}')
                         new_channel = await category.create_voice_channel(name=channel_name, reason='Initial Creation')
-                        print(f'After creating new channel: {symbol}: {channel_name}')
+                        print(f'Created voice channel: {symbol}: {channel_name}')
 
     @update_channels.before_loop
     async def before_update_channels(self):
@@ -92,29 +91,20 @@ class CryptoChannel(commands.Cog):
     @commands.command()
     async def enable(self, ctx, input_string: str):
         if "-" in input_string:
-            symbol, endpoint = input_string.split('-', 1)
+            symbol, endpoint = input_string.split('-', 1)  # Use 'split' with maxsplit parameter to avoid splitting on additional hyphens
             symbol = symbol.upper()
             api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-            # Get the guild ID
-            guild_id = ctx.guild.id
+            guild_id = self.guild_ids.get(ctx.guild.id)
+            if guild_id is None:
+                await ctx.send("Bot not assigned to a server.")
+                return
 
-            # Load the server data from servers.json
-            server_data = load_server_ids()
+            if guild_id not in self.enabled_cryptos:
+                self.enabled_cryptos[guild_id] = []
 
-            # Check if the guild is already in the server data or initialize it if it's not
-            if not any(d['guild_id'] == str(guild_id) for d in server_data):
-                server_data.append({
-                    "guild_id": str(guild_id),
-                    "enabled_currencies": []
-                })
-
-            # Check if the symbol is not already enabled for this guild
-            if symbol not in [c for d in server_data if 'guild_id' in d and d['guild_id'] == str(guild_id) for c in d["enabled_currencies"]]:
-                [d for d in server_data if 'guild_id' in d and d['guild_id'] == str(guild_id)][0]["enabled_currencies"].append(symbol)-(endpoint.lower)
-
-                # Save the updated server data back to servers.json
-                save_server_ids(server_data)
+            if symbol not in self.enabled_cryptos[guild_id]:
+                self.enabled_cryptos[guild_id].append(symbol)
 
                 with open(json_file_path, 'r') as file:
                     cryptocurrencies = json.load(file)
@@ -129,41 +119,38 @@ class CryptoChannel(commands.Cog):
             else:
                 await ctx.send(f'{symbol}-{api_endpoint} is already enabled.')
         else:
-            await ctx.send("Invalid input format. Use 'enable symbol-endpoint.'")
-
+            await ctx.send("Invalid input format. Use 'enable symbol-endpoint'.")
 
     @commands.command()
     async def disable(self, ctx, input_string: str):
-        if "-" in input_string:
-            symbol, endpoint = input_string.split('-', 1)
-            symbol = symbol.upper()
-            api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
+        if ctx.guild.id not in self.guild_ids:
+            await ctx.send("Bot not assigned to a server.")
+            return
 
-            # Get the guild ID
-            guild_id = ctx.guild.id
+        symbol, endpoint = input_string.split('-')
+        symbol = symbol.upper()
+        api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
-            # Load the server data from servers.json
-            server_data = load_server_ids()
+        guild_id = self.guild_ids[ctx.guild.id]
 
-            if guild_id in server_data and symbol in server_data[guild_id]["enabled_currencies"]:
-                server_data[guild_id]["enabled_currencies"].remove(symbol)-(endpoint.lower)
+        if guild_id not in self.enabled_cryptos:
+            await ctx.send("No cryptocurrencies are enabled for this server.")
+            return
 
-                # Save the updated server data back to servers.json
-                save_server_ids(server_data)
+        if symbol in self.enabled_cryptos[guild_id]:
+            self.enabled_cryptos[guild_id].remove(symbol)
 
-                with open(json_file_path, 'r') as file:
-                    cryptocurrencies = json.load(file)
+            with open(json_file_path, 'r') as file:
+                cryptocurrencies = json.load(file)
 
-                updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
+            updated_cryptocurrencies = [crypto for crypto in cryptocurrencies if not (crypto["symbol"] == symbol and crypto["api_endpoint"] == api_endpoint)]
 
-                with open(json_file_path, 'w') as file:
-                    json.dump(updated_cryptocurrencies, file, indent=4)
+            with open(json_file_path, 'w') as file:
+                json.dump(updated_cryptocurrencies, file, indent=4)
 
-                await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
-            else:
-                await ctx.send(f'{symbol}-{api_endpoint} is not enabled for this server.')
+            await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
         else:
-            await ctx.send("Invalid input format. Use 'disable symbol-endpoint.'")
+            await ctx.send(f'{symbol}-{api_endpoint} is not enabled for this server.')
 
 # Add these two functions for saving and loading server IDs
 
