@@ -14,7 +14,7 @@ import pytz
 from pytz import all_timezones
 
 
-__author__ = 'AXVin'
+__author__ = 'CryptoLover'
 __version__ = '1.0.3'
 
 
@@ -41,6 +41,12 @@ class Clock(commands.Cog):
         self.db = Config.get_conf(self, 675875687587, force_registration=True)
         self.db.register_channel(**channel_defaults)
         self.update_channels.start()
+        # Create a bot instance
+        intents = discord.Intents.default()
+        intents.typing = False
+        intents.presences = False
+
+        bot = commands.Bot(command_prefix="!", intents=intents)
 
 
     async def cog_unload(self):
@@ -110,3 +116,5 @@ class Clock(commands.Cog):
     @commands.is_owner()
     async def clear_all(self, ctx):
         await self.db.clear_all()
+
+bot.add_cog(Clock(bot))
