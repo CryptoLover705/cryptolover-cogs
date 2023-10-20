@@ -11,14 +11,14 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 current_directory = os.getcwd()
 json_file_path = os.path.join(current_directory, 'cryptocurrencies.json')
-
+servers_json_file = os.path.join(current_directory, 'servers.json')
 
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
-        self.guild_ids = {}  # Dictionary to store the Guild ID for each server
+        self.guild_data = load_server_data()  # Load server data from servers.json
 
     def cog_unload(self):
         self.update_channels.cancel()
@@ -76,9 +76,12 @@ class CryptoChannel(commands.Cog):
 
     @commands.command()
     async def assign_server(self, ctx):
-    # Store the Guild ID for this server
+        # Store the Guild ID for this server
         self.guild_ids[ctx.guild.id] = ctx.guild.id
         await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
+        
+        # Save the server IDs to servers.json
+        save_server_ids(self.guild_ids)
 
     @commands.command()
     async def enable(self, ctx, input_string: str):
@@ -143,5 +146,18 @@ class CryptoChannel(commands.Cog):
             await ctx.send(f'Disabled {symbol}-{api_endpoint} from tracking.')
         else:
             await ctx.send(f'{symbol}-{api_endpoint} is not enabled for this server.')
+
+# Add these two functions for saving and loading server IDs
+
+def save_server_ids(guild_ids):
+    with open(servers_json_file, 'w') as file:
+        json.dump(list(guild_ids.values()), file, indent=4)
+
+def load_server_ids():
+    if os.path.exists(servers_json_file):
+        with open(servers_json_file, 'r') as file:
+            server_ids = json.load(file)
+            return {guild_id: guild_id for guild_id in server_ids}
+    return {}
 
 bot.add_cog(CryptoChannel(bot))
