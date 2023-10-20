@@ -18,7 +18,7 @@ class CryptoChannel(commands.Cog):
         self.bot = bot
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
-        self.guild_data = load_server_data()  # Load server data from servers.json
+        self.guild_data = load_server_ids()  # Load server data from servers.json
 
     def cog_unload(self):
         self.update_channels.cancel()
