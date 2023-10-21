@@ -1,7 +1,7 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 # Red-DiscordBot
-from redbot.core import checks
+from redbot.core import commands, checks
 import requests
 import json
 import os
