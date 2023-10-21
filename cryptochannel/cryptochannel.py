@@ -12,9 +12,9 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 current_directory = os.getcwd()
 json_file_path = os.path.join(current_directory, 'cryptocurrencies.json')
+servers_json_file = os.path.join(current_directory, 'servers.json')
 
-channel_defaults = {
-}
+channel_defaults = {}
 
 
 class CryptoChannel(commands.Cog):
@@ -22,7 +22,7 @@ class CryptoChannel(commands.Cog):
         self.bot = bot
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
-        self.guild_ids = {}  # Dictionary to store the Guild ID for each server
+        self.guild_ids = self.load_guild_ids()  # Load guild IDs from servers.json
 
     def cog_unload(self):
         self.update_channels.cancel()
@@ -64,34 +64,31 @@ class CryptoChannel(commands.Cog):
                     else:
                         new_channel_name = f'{symbol}: Data Unavailable'
     
-
-
-
-                    # # Check if a channel with the cryptocurrency symbol exists
-                    # existing_channel = discord.utils.get(category.voice_channels, name=lambda n: n.startswith(f'{symbol}:'))
-
-                    # if existing_channel:
-                    #     if existing_channel.name != new_channel_name:
-                    #         # Update the existing channel's name
-                    #         await existing_channel.edit(name=new_channel_name, reason='Update Channel')
-                    #         print(f'Updated voice channel: {symbol}: {new_channel_name}')
-                    # else:
-                    #     # Create a new channel with the new name
-                    #     new_channel = await category.create_voice_channel(name=new_channel_name, reason='Initial Creation')
-                    #     print(f'Created voice channel: {symbol}: {new_channel_name}')
-
-
-
     @update_channels.before_loop
     async def before_update_channels(self):
         await self.bot.wait_until_ready()
 
+    # Function to load guild IDs from servers.json
+    def load_guild_ids(self):
+        if os.path.exists(servers_json_file):
+            with open(servers_json_file, 'r') as file:
+                return json.load(file)
+        return {}
+
+    # Function to save guild IDs to servers.json
+    def save_guild_ids(self):
+        with open(servers_json_file, 'w') as file:
+            json.dump(self.guild_ids, file, indent=4)
+
     @commands.command()
     @checks.admin_or_permissions(manage_guild=True)
     async def assign_server(self, ctx):
-    # Store the Guild ID for this server
-        self.guild_ids[ctx.guild.id] = ctx.guild.id
-        await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
+        if ctx.guild.id in self.guild_ids:
+            await ctx.send(f'This server is already assigned to Guild ID: {self.guild_ids[ctx.guild.id]}')
+        else:
+            self.guild_ids[ctx.guild.id] = ctx.guild.id
+            self.save_guild_ids()  # Save the updated guild IDs to servers.json
+            await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
 
     @commands.command()
     @checks.admin_or_permissions(manage_guild=True)
