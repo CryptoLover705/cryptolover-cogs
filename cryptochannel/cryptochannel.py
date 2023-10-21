@@ -1,6 +1,7 @@
 import discord
-from redbot.core import commands
-from discord.ext import tasks
+from discord.ext import commands, tasks
+# Red-DiscordBot
+from redbot.core import Config, checks
 import requests
 import json
 import os
@@ -12,10 +13,15 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 current_directory = os.getcwd()
 json_file_path = os.path.join(current_directory, 'cryptocurrencies.json')
 
+channel_defaults = {
+}
+
 
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.db = Config.get_conf(self, force_registration=True)
+        self.db.register_channel(**channel_defaults)
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
         self.guild_ids = {}  # Dictionary to store the Guild ID for each server
@@ -34,7 +40,6 @@ class CryptoChannel(commands.Cog):
             category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
             if category is None:
                 category = await guild.create_category('Cryptocurrency Prices', reason='Initial Category Creation')
-
             with open(json_file_path, 'r') as file:
                 cryptocurrencies = json.load(file)
 
@@ -46,28 +51,39 @@ class CryptoChannel(commands.Cog):
                     response = requests.get(url)
                     data = response.json() if response.status_code == 200 else None
                     if data:
-                        price_usd = data['quotes']['USD']['price']
-                        percent_change_24h = data['quotes']['USD']['percent_change_24h']
-                        price_usd_formatted = '{:.2f}'.format(price_usd)
-                        emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
-                        new_channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
-                        if len(new_channel_name) > 100:
-                            new_channel_name = new_channel_name[:97] + "..."
+                        try:
+                            price_usd = data['quotes']['USD']['price']
+                            percent_change_24h = data['quotes']['USD']['percent_change_24h']
+                            price_usd_formatted = '{:.2f}'.format(price_usd)
+                            emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
+                            channels = await self.db.all_channels()
+                            for channel_id in channels:
+                                channel = self.bot.get_channel(channel_id)
+                                if channel is None:
+                                    continue
+                                new_channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
+                                await channel.edit(name=new_channel_name)
+                        except Exception as e:
+                            print(f"Error updating channel: {e}")
                     else:
                         new_channel_name = f'{symbol}: Data Unavailable'
+    
 
-                    # Check if a channel with the cryptocurrency symbol exists
-                    existing_channel = discord.utils.get(category.voice_channels, name=lambda n: n.startswith(f'{symbol}:'))
 
-                    if existing_channel:
-                        if existing_channel.name != new_channel_name:
-                            # Update the existing channel's name
-                            await existing_channel.edit(name=new_channel_name, reason='Update Channel')
-                            print(f'Updated voice channel: {symbol}: {new_channel_name}')
-                    else:
-                        # Create a new channel with the new name
-                        new_channel = await category.create_voice_channel(name=new_channel_name, reason='Initial Creation')
-                        print(f'Created voice channel: {symbol}: {new_channel_name}')
+
+                    # # Check if a channel with the cryptocurrency symbol exists
+                    # existing_channel = discord.utils.get(category.voice_channels, name=lambda n: n.startswith(f'{symbol}:'))
+
+                    # if existing_channel:
+                    #     if existing_channel.name != new_channel_name:
+                    #         # Update the existing channel's name
+                    #         await existing_channel.edit(name=new_channel_name, reason='Update Channel')
+                    #         print(f'Updated voice channel: {symbol}: {new_channel_name}')
+                    # else:
+                    #     # Create a new channel with the new name
+                    #     new_channel = await category.create_voice_channel(name=new_channel_name, reason='Initial Creation')
+                    #     print(f'Created voice channel: {symbol}: {new_channel_name}')
+
 
 
     @update_channels.before_loop
@@ -75,12 +91,14 @@ class CryptoChannel(commands.Cog):
         await self.bot.wait_until_ready()
 
     @commands.command()
+    @checks.admin_or_permissions(manage_guild=True)
     async def assign_server(self, ctx):
     # Store the Guild ID for this server
         self.guild_ids[ctx.guild.id] = ctx.guild.id
         await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
 
     @commands.command()
+    @checks.admin_or_permissions(manage_guild=True)
     async def enable(self, ctx, input_string: str):
         if "-" in input_string:
             symbol, endpoint = input_string.split('-', 1)  # Use 'split' with maxsplit parameter to avoid splitting on additional hyphens
@@ -114,6 +132,7 @@ class CryptoChannel(commands.Cog):
             await ctx.send("Invalid input format. Use 'enable symbol-endpoint'.")
 
     @commands.command()
+    @checks.admin_or_permissions(manage_guild=True)
     async def disable(self, ctx, input_string: str):
         if ctx.guild.id not in self.guild_ids:
             await ctx.send("Bot not assigned to a server.")
