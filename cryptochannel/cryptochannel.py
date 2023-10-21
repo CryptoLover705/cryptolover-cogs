@@ -34,9 +34,11 @@ class CryptoChannel(commands.Cog):
             if guild is None:
                 continue
 
-            category = discord.utils.get(guild.categories, name='Cryptocurrency Prices')
+            # Check if the "Crypto Prices" category exists; create it if it doesn't
+            category = discord.utils.get(guild.categories, name='Crypto Prices')
             if category is None:
-                category = await guild.create_category('Cryptocurrency Prices', reason='Initial Category Creation')
+                category = await guild.create_category('Crypto Prices', reason='Initial Category Creation')
+
             with open(json_file_path, 'r') as file:
                 cryptocurrencies = json.load(file)
 
@@ -53,15 +55,19 @@ class CryptoChannel(commands.Cog):
                             percent_change_24h = data['quotes']['USD']['percent_change_24h']
                             price_usd_formatted = '{:.2f}'.format(price_usd)
                             emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
-                            channels = guild.voice_channels
-                            channels = guild.voice_channels
-                            for channel in channels:
-                                new_channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
-                                await channel.edit(name=new_channel_name)
+                            
+                            # Check if the voice channel exists; create it within the category if it doesn't
+                            voice_channel = discord.utils.get(category.voice_channels, name=symbol)
+                            if voice_channel is None:
+                                voice_channel = await category.create_voice_channel(symbol, reason='Initial Channel Creation')
+
+                            new_channel_name = f'{emoji} ${price_usd_formatted}'
+                            await voice_channel.edit(name=new_channel_name)
                         except Exception as e:
                             print(f"Error updating channel: {e}")
                     else:
-                        new_channel_name = f'{symbol}: Data Unavailable'
+                        # Handle the case when data is unavailable
+                        new_channel_name = f'Data Unavailable'
     
     @update_channels.before_loop
     async def before_update_channels(self):
