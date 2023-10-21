@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 # Red-DiscordBot
-from redbot.core import Config, checks
+from redbot.core import checks
 import requests
 import json
 import os
@@ -20,7 +20,6 @@ channel_defaults = {
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = Config.get_conf(self, force_registration=True)
         self.db.register_channel(**channel_defaults)
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
