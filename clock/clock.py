@@ -42,10 +42,6 @@ class Clock(commands.Cog):
 
     @tasks.loop(seconds=300)
     async def update_channels(self):
-        for guild in self.bot.guilds:
-            category = discord.utils.get(guild.categories, name='Staff TimeZones')
-        if category is None:
-            category = await guild.create_category('Staff TimeZones', reason='Initial Category Creation')
         channels = await self.db.all_channels()
         for channel_id in channels:
             channel = self.bot.get_channel(channel_id)
@@ -81,22 +77,30 @@ class Clock(commands.Cog):
         For timezone, check out: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
         For format, check out: https://strftime.org. Default is "%A, %I:%M %p (%Z)"
         """
+        # Get the guild
+        guild = ctx.guild
+
+        # Check if the category "Staff TimeZones" exists, and create it if it doesn't
+        category = discord.utils.get(guild.categories, name='Staff TimeZones')
+        if category is None:
+            category = await guild.create_category('Staff TimeZones', reason='Initial Category Creation')
+
         time = datetime.now(pytz.timezone(timezone))
         try:
             time = time.strftime(format)
         except ValueError:
             return await ctx.send("That is an invalid format! "
-                                  "Please only use variables from https://strftime.org")
+                                "Please only use variables from https://strftime.org")
         try:
-            channel = await ctx.guild.create_voice_channel(name=time)
+            channel = await guild.create_voice_channel(name=time, category=category)
         except Exception as e:
             await ctx.send(e)
             return
         await self.db.channel(channel).timezone.set(timezone)
         if format:
             await self.db.channel(channel).time_format.set(format)
-        await ctx.send(f"Successfully created a channel with **{timezone}** timezone."
-                       " It should be resolved on the next cycle (5 minutes)")
+        await ctx.send(f"Successfully created a channel with **{timezone}** timezone in the 'Staff TimeZones' category."
+                    " It should be resolved on the next cycle (5 minutes)")
 
     @clock.command(hidden=True)
     @commands.is_owner()
