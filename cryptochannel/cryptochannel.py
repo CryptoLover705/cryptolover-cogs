@@ -12,7 +12,6 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 current_directory = os.getcwd()
 json_file_path = os.path.join(current_directory, 'cryptocurrencies.json')
-servers_json_file = os.path.join(current_directory, 'servers.json')
 
 channel_defaults = {}
 
@@ -22,7 +21,7 @@ class CryptoChannel(commands.Cog):
         self.bot = bot
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
-        self.guild_ids = self.load_guild_ids()  # Load guild IDs from servers.json
+        self.guild_ids = {}  # Dictionary to store the Guild ID for each server
 
     def cog_unload(self):
         self.update_channels.cancel()
@@ -68,27 +67,12 @@ class CryptoChannel(commands.Cog):
     async def before_update_channels(self):
         await self.bot.wait_until_ready()
 
-    # Function to load guild IDs from servers.json
-    def load_guild_ids(self):
-        if os.path.exists(servers_json_file):
-            with open(servers_json_file, 'r') as file:
-                return json.load(file)
-        return {}
-
-    # Function to save guild IDs to servers.json
-    def save_guild_ids(self):
-        with open(servers_json_file, 'w') as file:
-            json.dump(self.guild_ids, file, indent=4)
-
     @commands.command()
     @checks.admin_or_permissions(manage_guild=True)
     async def assign_server(self, ctx):
-        if ctx.guild.id in self.guild_ids:
-            await ctx.send(f'This server is already assigned to Guild ID: {self.guild_ids[ctx.guild.id]}')
-        else:
-            self.guild_ids[ctx.guild.id] = ctx.guild.id
-            self.save_guild_ids()  # Save the updated guild IDs to servers.json
-            await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
+    # Store the Guild ID for this server
+        self.guild_ids[ctx.guild.id] = ctx.guild.id
+        await ctx.send(f'Assigned this server to Guild ID: {ctx.guild.id}')
 
     @commands.command()
     @checks.admin_or_permissions(manage_guild=True)
