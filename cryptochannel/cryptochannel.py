@@ -136,7 +136,7 @@ class CryptoChannel(commands.Cog):
             await ctx.send("Bot not assigned to a server.")
             return
 
-        symbol, endpoint = input_string.split('-')
+        symbol, endpoint = input_string.split('-', 1)  # Use 'split' with maxsplit parameter to avoid splitting on additional hyphens
         symbol = symbol.upper()
         api_endpoint = f'{symbol.lower()}-{endpoint.lower()}'
 
