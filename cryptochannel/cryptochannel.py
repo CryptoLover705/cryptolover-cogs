@@ -54,7 +54,7 @@ class CryptoChannel(commands.Cog):
                             percent_change_24h = data['quotes']['USD']['percent_change_24h']
                             price_usd_formatted = '{:.2f}'.format(price_usd)
                             emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
-                            channels = await self.all_channels()
+                            channels = guild.voice_channels
                             for channel_id in channels:
                                 channel = self.bot.get_channel(channel_id)
                                 if channel is None:
