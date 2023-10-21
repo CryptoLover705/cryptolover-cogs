@@ -42,6 +42,10 @@ class Clock(commands.Cog):
 
     @tasks.loop(seconds=300)
     async def update_channels(self):
+        for guild in self.bot.guilds:
+            category = discord.utils.get(guild.categories, name='Staff TimeZones')
+        if category is None:
+            category = await guild.create_category('Staff TimeZones', reason='Initial Category Creation')
         channels = await self.db.all_channels()
         for channel_id in channels:
             channel = self.bot.get_channel(channel_id)
