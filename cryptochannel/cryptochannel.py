@@ -61,7 +61,7 @@ class CryptoChannel(commands.Cog):
                             if voice_channel is None:
                                 voice_channel = await category.create_voice_channel(symbol, reason='Initial Channel Creation')
 
-                            new_channel_name = f'{emoji} ${price_usd_formatted}'
+                            new_channel_name = f'{symbol}:{emoji} ${price_usd_formatted}'
                             await voice_channel.edit(name=new_channel_name)
                         except Exception as e:
                             print(f"Error updating channel: {e}")
