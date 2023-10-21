@@ -55,10 +55,8 @@ class CryptoChannel(commands.Cog):
                             price_usd_formatted = '{:.2f}'.format(price_usd)
                             emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
                             channels = guild.voice_channels
-                            for channel_id in channels:
-                                channel = self.bot.get_channel(channel_id)
-                                if channel is None:
-                                    continue
+                            channels = guild.voice_channels
+                            for channel in channels:
                                 new_channel_name = f'{symbol}: {emoji} ${price_usd_formatted}'
                                 await channel.edit(name=new_channel_name)
                         except Exception as e:
