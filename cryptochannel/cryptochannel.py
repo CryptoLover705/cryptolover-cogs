@@ -20,7 +20,6 @@ channel_defaults = {
 class CryptoChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db.register_channel(**channel_defaults)
         self.update_channels.start()
         self.enabled_cryptos = {}  # Dictionary to store enabled cryptocurrencies per server
         self.guild_ids = {}  # Dictionary to store the Guild ID for each server
@@ -55,7 +54,7 @@ class CryptoChannel(commands.Cog):
                             percent_change_24h = data['quotes']['USD']['percent_change_24h']
                             price_usd_formatted = '{:.2f}'.format(price_usd)
                             emoji = "🟢↗" if percent_change_24h > 0 else "🔴↘"
-                            channels = await self.db.all_channels()
+                            channels = await self.all_channels()
                             for channel_id in channels:
                                 channel = self.bot.get_channel(channel_id)
                                 if channel is None:
