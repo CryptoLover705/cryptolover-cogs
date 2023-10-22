@@ -5,7 +5,7 @@ import popcat_wrapper
 intents = discord.Intents.default()  # Create a default set of intents
 intents.typing = False  # You can adjust the intents as needed
 
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 @bot.command()
