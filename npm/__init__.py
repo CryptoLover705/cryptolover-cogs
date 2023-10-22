@@ -1,5 +1,5 @@
-from .npm import NPM
+from .npm import Npm
 
 
 async def setup(bot):
-    await bot.add_cog(NPM(bot))
+    await bot.add_cog(Npm(bot))
