@@ -107,5 +107,3 @@ class Clock(commands.Cog):
     async def clear_all(self, ctx):
         await self.db.clear_all()
 
-def setup(bot):
-    bot.add_cog(Clock(bot))
