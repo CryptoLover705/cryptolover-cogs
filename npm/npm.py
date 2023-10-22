@@ -2,6 +2,9 @@ import discord
 from redbot.core import commands
 import popcat_wrapper
 
+intents = discord.Intents.default()  # Create a default set of intents
+intents.typing = False  # You can adjust the intents as needed
+
 bot = commands.Bot(command_prefix='!')
 
 
