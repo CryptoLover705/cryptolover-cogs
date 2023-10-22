@@ -5,7 +5,7 @@
     ],
     "min_bot_version": "3.4.0",
     "description": "Create a channel with updating price info for crypto",
-    "hidden": false,
+    "hidden": true,
     "install_msg": "Thank you for installing CryptoChannel. Get started with `[p]load cryptochannel`, then `[p]help cryptochannel`",
     "short": "Updating server crypto channel",
     "end_user_data_statement": "This cog does not store any End User Data",
