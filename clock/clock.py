@@ -40,7 +40,7 @@ class Clock(commands.Cog):
     async def cog_unload(self):
         self.update_channels.cancel()
 
-    @tasks.loop(seconds=300)
+    @tasks.loop(minutes=5)
     async def update_channels(self):
         channels = await self.db.all_channels()
         for channel_id in channels:
