@@ -138,9 +138,11 @@ class Search(commands.Cog):
         embed.add_field(name="🧑‍💼┇Company", value=r['company'], inline=True)
         embed.add_field(name="💬┇Bio", value=r['bio'], inline=True)
         embed.add_field(name="📁┇Public Repositories", value=r['public_repos'], inline=True)
+
+        created_at = datetime.fromisoformat(r['created_at'][:-1])  # Convert created_at string to datetime
         embed.add_field(
             name="⏰┇Created At",
-            value=f"<t:{int(r['created_at'].timestamp())}>",
+            value=f"<t:{int(created_at.timestamp())}>",
             inline=True,
         )
 
