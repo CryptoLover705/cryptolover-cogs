@@ -1,6 +1,5 @@
 import discord
 from redbot.core import commands
-from discord.ext import commands
 
 class Verify(commands.Cog):
     def __init__(self, bot):
