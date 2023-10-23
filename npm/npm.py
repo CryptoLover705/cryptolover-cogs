@@ -1,6 +1,7 @@
 import discord
 from redbot.core import commands
 from popcat_wrapper import popcat_wrapper as pop
+from datetime import datetime
 
 intents = discord.Intents.default()
 intents.typing = False
@@ -19,6 +20,10 @@ class Npm(commands.Cog):
             return await ctx.send("Package not found!")
 
         if "name" in package_info:  # Check if 'name' key exists in the package_info dictionary
+            last_published_str = package_info.get('last_published', 'N/A')
+            last_published_timestamp = datetime.fromisoformat(last_published_str)
+            last_published_formatted = f"<t:{int(last_published_timestamp.timestamp())}>"
+
             embed = discord.Embed(title=f"📁・{package_info['name']}")
             embed.add_field(name="💬┇Name", value=package_info['name'], inline=True)
             embed.add_field(name="🏷️┇Version", value=package_info.get('version', 'N/A'), inline=True)
@@ -26,7 +31,7 @@ class Npm(commands.Cog):
             embed.add_field(name="⌨️┇Keywords", value=package_info.get('keywords', 'N/A'), inline=True)
             embed.add_field(name="💻┇Author", value=package_info.get('author', 'N/A'), inline=True)
             embed.add_field(name="📁┇Downloads", value=package_info.get('downloads_this_year', 'N/A'), inline=True)
-            embed.add_field(name="⏰┇Last publish", value=f"<t:{int(package_info['last_published'].timestamp())}>", inline=True)
+            embed.add_field(name="⏰┇Last publish", value=last_published_formatted, inline=True)
         else:
             return await ctx.send("Package information format is not recognized.")
 
