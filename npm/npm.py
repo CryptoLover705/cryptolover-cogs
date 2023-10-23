@@ -12,7 +12,7 @@ class Npm(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def package_info(self, ctx, name: str):
+    async def npm(self, ctx, name: str):
         try:
             r = await pop.npm(name)
         except Exception as e:
