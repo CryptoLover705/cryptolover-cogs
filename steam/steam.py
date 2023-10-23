@@ -15,10 +15,8 @@ class Steam(commands.Cog):
     @commands.command()
     async def steam(self, ctx, name: str):
         try:
-            steam_info = await pop.steam(name)
-            print(steam_info)
+            steam_info = await self.get_steam_info(name)
         except Exception as e:
-            print(e)
             return await ctx.send("Game not found!")
 
         if "name" in steam_info:  # Check if 'name' key exists in the package_info dictionary
@@ -29,14 +27,21 @@ class Steam(commands.Cog):
             except ValueError:
                 last_published_formatted = "N/A"
 
-            embed = discord.Embed(title=f"🎮・{steam_info.name}", thumbnail=steam_info.thumbnail)
-            embed.add_field(name="💬┇Name", value=steam_info.name, inline=True)
-            embed.add_field(name="📃┇Capital", value=steam_info.description, inline=False)
-            embed.add_field(name="💻┇Developers", value=", ".join(steam_info.developers), inline=True)
-            embed.add_field(name="☁┇Publishers", value=", ".join(steam_info.publishers), inline=True)
-            embed.add_field(name="🪙┇Price", value=steam_info.price, inline=True)
+            embed = discord.Embed(title=f"🎮・{steam_info['name']}", thumbnail=steam_info['thumbnail'])
+            embed.add_field(name="💬┇Name", value=steam_info['name'], inline=True)
+            embed.add_field(name="📃┇Description", value=steam_info['description'], inline=False)
+            embed.add_field(name="💻┇Developers", value=", ".join(steam_info['developers']), inline=True)
+            embed.add_field(name="☁┇Publishers", value=", ".join(steam_info['publishers']), inline=True)
+            embed.add_field(name="🪙┇Price", value=steam_info['price'], inline=True)
             embed.add_field(name="⏰┇Published", value=last_published_formatted, inline=True)
         else:
             return await ctx.send("Game information format is not recognized.")
 
         await ctx.send(embed=embed)
+
+    async def get_steam_info(self, name):
+        try:
+            s = await pop.steam(name)
+            return s
+        except Exception as e:
+            return None
