@@ -42,16 +42,6 @@ class Search(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def youtube(self, ctx, name: str):
-        name = name.replace(" ", "+")
-        link = f'https://www.youtube.com/results?search_query={name}'
-
-        embed = discord.Embed(description=f"I have found the following for: `{name}`")
-        embed.add_field(name="🔗┇Link", value=f'[Click here to see the link]({link})', inline=True)
-
-        await ctx.send(embed=embed)
-
     # @commands.command()
     # async def steam(self, ctx, name: str):
     #     await ctx.defer()
