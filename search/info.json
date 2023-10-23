@@ -1,0 +1,17 @@
+{
+    "author": 
+    [
+      "CryptoLover705"
+    ],
+    "min_bot_version": "3.4.0",
+    "description": "Search various platforms such as NPM, Youtube, Google",
+    "hidden": true,
+    "install_msg": "Thank you for installing Search. Get started with `[p]load search`, then `[p]help search`",
+    "short": "Search various platforms such as NPM, Youtube, Google",
+    "end_user_data_statement": "This cog does not store any End User Data",
+    "tags": 
+    [
+      "cryptolover705",
+      "utils"
+    ]
+}
