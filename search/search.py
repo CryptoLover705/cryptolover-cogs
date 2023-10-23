@@ -131,16 +131,16 @@ class Search(commands.Cog):
         except Exception as e:
             return await ctx.send(f"No account found with the username: {name}", reference=ctx.message)
 
-        embed = discord.Embed(title=f"🏷️・{r.name}")
-        embed.set_thumbnail(url=r.avatar)
-        embed.url = r.url
-        embed.add_field(name="💬┇Name", value=r.name, inline=True)
-        embed.add_field(name="🧑‍💼┇Company", value=r.company, inline=True)
-        embed.add_field(name="💬┇Bio", value=r.bio, inline=True)
-        embed.add_field(name="📁┇Public Repositories", value=r.public_repos, inline=True)
+        embed = discord.Embed(title=f"🏷️・{r['name']}")
+        embed.set_thumbnail(url=r['avatar'])
+        embed.url = r['url']
+        embed.add_field(name="💬┇Name", value=r['name'], inline=True)
+        embed.add_field(name="🧑‍💼┇Company", value=r['company'], inline=True)
+        embed.add_field(name="💬┇Bio", value=r['bio'], inline=True)
+        embed.add_field(name="📁┇Public Repositories", value=r['public_repos'], inline=True)
         embed.add_field(
             name="⏰┇Created At",
-            value=f"<t:{int(r.created_at.timestamp())}>",
+            value=f"<t:{int(r['created_at'].timestamp())}>",
             inline=True,
         )
 
