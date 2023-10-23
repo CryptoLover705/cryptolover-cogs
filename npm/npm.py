@@ -14,17 +14,20 @@ class Npm(commands.Cog):
     @commands.command()
     async def npm(self, ctx, name: str):
         try:
-            r = await pop.npm(name)
+            package_info = await pop.npm(name)
         except Exception as e:
             return await ctx.send("Package not found!")
 
-        embed = discord.Embed(title=f"📁・{r.name}")
-        embed.add_field(name="💬┇Name", value=r.name, inline=True)
-        embed.add_field(name="🏷️┇Version", value=r.version, inline=True)
-        embed.add_field(name="📃┇Description", value=r.description, inline=True)
-        embed.add_field(name="⌨️┇Keywords", value=r.keywords, inline=True)
-        embed.add_field(name="💻┇Author", value=r.author, inline=True)
-        embed.add_field(name="📁┇Downloads", value=r.downloads_this_year, inline=True)
-        embed.add_field(name="⏰┇Last publish", value=f"<t:{int(r.last_published.timestamp())}>", inline=True)
+        if "name" in package_info:  # Check if 'name' key exists in the package_info dictionary
+            embed = discord.Embed(title=f"📁・{package_info['name']}")
+            embed.add_field(name="💬┇Name", value=package_info['name'], inline=True)
+            embed.add_field(name="🏷️┇Version", value=package_info.get('version', 'N/A'), inline=True)
+            embed.add_field(name="📃┇Description", value=package_info.get('description', 'N/A'), inline=True)
+            embed.add_field(name="⌨️┇Keywords", value=package_info.get('keywords', 'N/A'), inline=True)
+            embed.add_field(name="💻┇Author", value=package_info.get('author', 'N/A'), inline=True)
+            embed.add_field(name="📁┇Downloads", value=package_info.get('downloads_this_year', 'N/A'), inline=True)
+            embed.add_field(name="⏰┇Last publish", value=f"<t:{int(package_info['last_published'].timestamp())}>", inline=True)
+        else:
+            return await ctx.send("Package information format is not recognized.")
 
         await ctx.send(embed=embed)
