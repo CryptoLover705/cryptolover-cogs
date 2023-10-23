@@ -7,29 +7,24 @@ intents.typing = False
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-class Npm:
-    @staticmethod
-    async def get_package_info(name):
+class Npm(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command()
+    async def package_info(self, ctx, name: str):
         try:
             r = await pop.npm(name)
-            return r
         except Exception as e:
-            return None
+            return await ctx.send("Package not found!")
 
-@bot.command()
-async def package_info(ctx, name: str):
-    package_info = await Npm.get_package_info(name)
+        embed = discord.Embed(title=f"📁・{r.name}")
+        embed.add_field(name="💬┇Name", value=r.name, inline=True)
+        embed.add_field(name="🏷️┇Version", value=r.version, inline=True)
+        embed.add_field(name="📃┇Description", value=r.description, inline=True)
+        embed.add_field(name="⌨️┇Keywords", value=r.keywords, inline=True)
+        embed.add_field(name="💻┇Author", value=r.author, inline=True)
+        embed.add_field(name="📁┇Downloads", value=r.downloads_this_year, inline=True)
+        embed.add_field(name="⏰┇Last publish", value=f"<t:{int(r.last_published.timestamp())}>", inline=True)
 
-    if package_info is None:
-        return await ctx.send("Package not found!")
-
-    embed = discord.Embed(title=f"📁・{package_info.name}")
-    embed.add_field(name="💬┇Name", value=package_info.name, inline=True)
-    embed.add_field(name="🏷️┇Version", value=package_info.version, inline=True)
-    embed.add_field(name="📃┇Description", value=package_info.description, inline=True)
-    embed.add_field(name="⌨️┇Keywords", value=package_info.keywords, inline=True)
-    embed.add_field(name="💻┇Author", value=package_info.author, inline=True)
-    embed.add_field(name="📁┇Downloads", value=package_info.downloads_this_year, inline=True)
-    embed.add_field(name="⏰┇Last publish", value=f"<t:{int(package_info.last_published.timestamp())}>", inline=True)
-
-    await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
