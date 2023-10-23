@@ -127,7 +127,7 @@ class Search(commands.Cog):
     async def fetch_itunes_data(self, song):
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f'https://itunes.apple.com/search?term={song}&entity=musicTrack') as response:
+                async with session.get(f'https://apple.com/us/search/{song}&entity=musicTrack') as response:
                     data = await response.json()
 
             if data['resultCount'] == 0:
