@@ -105,20 +105,20 @@ class Search(commands.Cog):
         try:
             r = await pop.itunes(song)
         except Exception as e:
-            return await ctx.send("Song not found!", reference=ctx.message)
+            return await ctx.send(f"Song not found!", reference=ctx.message)
 
-        embed = discord.Embed(title=f"🎶・{r.name}")
-        embed.set_thumbnail(url=r.thumbnail)
-        embed.url = r.url
-        embed.add_field(name="💬┇Name", value=r.name, inline=True)
-        embed.add_field(name="🎤┇Artist", value=r.artist, inline=True)
-        embed.add_field(name="📁┇Album", value=r.album, inline=True)
-        embed.add_field(name="🎼┇Length", value=r.length, inline=True)
-        embed.add_field(name="🏷️┇Genre", value=r.genre, inline=True)
-        embed.add_field(name="💵┇Price", value=r.price, inline=True)
+        embed = discord.Embed(title=f"🎶・{r['name']}")
+        embed.set_thumbnail(url=r['thumbnail'])
+        embed.url = r['url']
+        embed.add_field(name="💬┇Name", value=r['name'], inline=True)
+        embed.add_field(name="🎤┇Artist", value=r['artist'], inline=True)
+        embed.add_field(name="📁┇Album", value=r['album'], inline=True)
+        embed.add_field(name="🎼┇Length", value=r['length'], inline=True)
+        embed.add_field(name="🏷️┇Genre", value=r['genre'], inline=True)
+        embed.add_field(name="💵┇Price", value=r['price'], inline=True)
         embed.add_field(
             name="⏰┇Release Date",
-            value=f"<t:{int(r.release_date.timestamp())}>",
+            value=f"<t:{int(r['release_date'].timestamp())}>",
             inline=True,
         )
 
