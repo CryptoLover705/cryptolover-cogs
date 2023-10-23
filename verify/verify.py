@@ -1,5 +1,6 @@
 import discord
 from redbot.core import commands
+from discord.ui import Button, ButtonStyle
 
 class Verify(commands.Cog):
     def __init__(self, bot):
@@ -25,8 +26,8 @@ class Verify(commands.Cog):
         return embed
 
     async def create_verification_button(self, ctx, channel):
-        verify_button = discord.Button(style=discord.ButtonStyle.success, label="Verify")
-        verify_action_row = discord.ActionRow(verify_button)
+        verify_button = Button(style=ButtonStyle.primary, label="Verify")
+        verify_action_row = discord.ui.ActionRow(verify_button)
         message = await channel.send("Click the button to verify yourself.", components=[verify_action_row])
 
         # Wait for the user to click the button
