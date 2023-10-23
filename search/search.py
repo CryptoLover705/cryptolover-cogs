@@ -3,6 +3,7 @@ from redbot.core import commands
 from popcat_wrapper import popcat_wrapper as pop
 from datetime import datetime
 import aiohttp
+import requests
 
 intents = discord.Intents.default()
 intents.typing = False
@@ -108,27 +109,28 @@ class Search(commands.Cog):
             return await ctx.send(f"An error occurred while fetching song data. Please try again later.", reference=ctx.message)
 
         embed = discord.Embed(title=f"🎶・{r['name']}")
-        embed.set_thumbnail(url=r['thumbnail'])
+        embed.set_thumbnail(url=r['thumbnailUrl'])
         embed.url = r['url']
         embed.add_field(name="💬┇Name", value=r['name'], inline=True)
-        embed.add_field(name="🎤┇Artist", value=r['artist'], inline=True)
-        embed.add_field(name="📁┇Album", value=r['album'], inline=True)
-        embed.add_field(name="🎼┇Length", value=r['length'], inline=True)
-        embed.add_field(name="🏷️┇Genre", value=r['genre'], inline=True)
-        embed.add_field(name="💵┇Price", value=r['price'], inline=True)
+        embed.add_field(name="🎤┇Artist", value=r['artistName'], inline=True)
+        embed.add_field(name="📁┇Album", value=r['collectionName'], inline=True)
+        embed.add_field(name="🎼┇Length", value=f"{r['trackTimeMillis'] / 60000} minutes", inline=True)
+        embed.add_field(name="🏷️┇Genre", value=r['primaryGenreName'], inline=True)
+        embed.add_field(name="💵┇Price", value=f"${r['collectionPrice']}", inline=True)
         embed.add_field(
             name="⏰┇Release Date",
-            value=f"<t:{int(r['release_date'].timestamp())}>",
+            value=f"<t:{int(r['releaseDate'][:-5])}>",
             inline=True,
         )
 
         await ctx.send(embed=embed)
 
-    async def fetch_itunes_data(self, song):
+    def fetch_itunes_data(self, song):
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f'https://apple.com/us/search/{song}&entity=musicTrack') as response:
-                    data = await response.json()
+            url = f'https://itunes.apple.com/search?term={song}&entity=musicTrack'
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
 
             if data['resultCount'] == 0:
                 raise Exception("Song not found")
