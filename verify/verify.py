@@ -1,5 +1,6 @@
 import discord
 from redbot.core import commands
+from discord.ext import commands
 
 class Verify(commands.Cog):
     def __init__(self, bot):
@@ -11,7 +12,8 @@ class Verify(commands.Cog):
             return
 
         if enable:
-            await ctx.send("Verify panel has been successfully created", embed=self.create_embed(ctx.guild.name, channel, role))
+            embed = self.create_embed(ctx.guild.name, channel, role)
+            await ctx.send("Verify panel has been successfully created", embed=embed)
             await self.create_verification_button(ctx, channel)
 
     def create_embed(self, guild_name, channel, role):
@@ -26,4 +28,18 @@ class Verify(commands.Cog):
     async def create_verification_button(self, ctx, channel):
         verify_button = discord.Button(style=discord.ButtonStyle.success, label="Verify")
         verify_action_row = discord.ActionRow(verify_button)
-        await channel.send("Click the button to verify yourself.", components=[verify_action_row])
+        message = await channel.send("Click the button to verify yourself.", components=[verify_action_row])
+
+        # Wait for the user to click the button
+        try:
+            interaction = await self.bot.wait_for(
+                "button_click", check=lambda i: i.message.id == message.id and i.user == ctx.author, timeout=60
+            )
+            await interaction.respond(content=f"{interaction.user.mention}, you have been verified!")
+            # Assign the 'role' to the user as needed
+        except TimeoutError:
+            await ctx.send("Verification timed out.")
+
+        # Remove the button after verification
+        await message.edit(components=[])
+
