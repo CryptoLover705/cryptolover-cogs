@@ -103,11 +103,9 @@ class Search(commands.Cog):
     @commands.command()
     async def itunes(self, ctx, song: str):
         try:
-            r = await pop.itunes(song)
+            r = await self.fetch_itunes_data(song)
         except Exception as e:
-            return await ctx.send(f"Song not found!", reference=ctx.message)
-        
-        r = await r  # Await the coroutine to get the actual data
+            return await ctx.send(f"An error occurred while fetching song data. Please try again later.", reference=ctx.message)
 
         embed = discord.Embed(title=f"🎶・{r['name']}")
         embed.set_thumbnail(url=r['thumbnail'])
@@ -125,6 +123,20 @@ class Search(commands.Cog):
         )
 
         await ctx.send(embed=embed)
+
+    async def fetch_itunes_data(self, song):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f'https://itunes.apple.com/search?term={song}&entity=musicTrack') as response:
+                    data = await response.json()
+
+            if data['resultCount'] == 0:
+                raise Exception("Song not found")
+
+            song_data = data['results'][0]
+            return song_data
+        except Exception as e:
+            raise e
 
     @commands.command()
     async def github(self, ctx, name: str):
