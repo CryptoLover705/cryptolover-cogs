@@ -16,8 +16,10 @@ class Steam(commands.Cog):
     async def steam(self, ctx, name: str):
         try:
             steam_info = await pop.steam(name)
+            print(steam_info)
         except Exception as e:
-            return await ctx.send("Package not found!")
+            print(e)
+            return await ctx.send("Game not found!")
 
         if "name" in steam_info:  # Check if 'name' key exists in the package_info dictionary
             last_published_str = steam_info.get('last_published', 'N/A')
@@ -35,6 +37,6 @@ class Steam(commands.Cog):
             embed.add_field(name="🪙┇Price", value=steam_info.price, inline=True)
             embed.add_field(name="⏰┇Published", value=last_published_formatted, inline=True)
         else:
-            return await ctx.send("Package information format is not recognized.")
+            return await ctx.send("Game information format is not recognized.")
 
         await ctx.send(embed=embed)
