@@ -104,41 +104,43 @@ class Search(commands.Cog):
     @commands.command()
     async def itunes(self, ctx, song: str):
         try:
-            r = await self.fetch_itunes_data(song)
+            r = self.fetch_itunes_data(song)
+            if not r:
+                raise Exception("Song not found")
+
+            embed = discord.Embed(title=f"🎶・{r['trackName']}")
+            embed.set_thumbnail(url=r.get('artworkUrl100', ''))
+            embed.url = r.get('trackViewUrl', '')
+            embed.add_field(name="💬┇Name", value=r.get('trackName', 'N/A'), inline=True)
+            embed.add_field(name="🎤┇Artist", value=r.get('artistName', 'N/A'), inline=True)
+            embed.add_field(name="📁┇Album", value=r.get('collectionName', 'N/A'), inline=True)
+            embed.add_field(name="🎼┇Length", value=f"{r.get('trackTimeMillis', 0) / 60000} minutes", inline=True)
+            embed.add_field(name="🏷️┇Genre", value=r.get('primaryGenreName', 'N/A'), inline=True)
+            embed.add_field(name="💵┇Price", value=f"${r.get('collectionPrice', 'N/A')}", inline=True)
+            embed.add_field(
+                name="⏰┇Release Date",
+                value=f"<t:{int(r.get('releaseDate', 'N/A')[:-5])}>",
+                inline=True,
+            )
+
+            await ctx.send(embed=embed)
         except Exception as e:
             return await ctx.send(f"An error occurred while fetching song data. Please try again later.", reference=ctx.message)
 
-        embed = discord.Embed(title=f"🎶・{r['name']}")
-        embed.set_thumbnail(url=r['thumbnailUrl'])
-        embed.url = r['url']
-        embed.add_field(name="💬┇Name", value=r['name'], inline=True)
-        embed.add_field(name="🎤┇Artist", value=r['artistName'], inline=True)
-        embed.add_field(name="📁┇Album", value=r['collectionName'], inline=True)
-        embed.add_field(name="🎼┇Length", value=f"{r['trackTimeMillis'] / 60000} minutes", inline=True)
-        embed.add_field(name="🏷️┇Genre", value=r['primaryGenreName'], inline=True)
-        embed.add_field(name="💵┇Price", value=f"${r['collectionPrice']}", inline=True)
-        embed.add_field(
-            name="⏰┇Release Date",
-            value=f"<t:{int(r['releaseDate'][:-5])}>",
-            inline=True,
-        )
-
-        await ctx.send(embed=embed)
-
     def fetch_itunes_data(self, song):
         try:
-            url = f'https://music.apple.com/us/search?term={song}'
+            url = f'https://itunes.apple.com/search?term={song}&entity=musicTrack'
             response = requests.get(url)
             response.raise_for_status()
             data = response.json()
 
             if data['resultCount'] == 0:
-                raise Exception("Song not found")
+                return None
 
             song_data = data['results'][0]
             return song_data
         except Exception as e:
-            raise e
+            return None
 
     @commands.command()
     async def github(self, ctx, name: str):
