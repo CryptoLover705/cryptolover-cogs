@@ -132,15 +132,16 @@ class Search(commands.Cog):
         except Exception as e:
             return await ctx.send("Song not found!")
 
-        if "name" in song_info:  # Check if 'name' key exists in the song_info dictionary
-            song_name = song_info['name']
-            artist = song_info['artist']
-            album = song_info['album']
-            length = song_info['length']
-            genre = song_info['genre']
-            price = song_info['price']
+        song_data = await song_info
+        if "name" in song_data:  # Check if 'name' key exists in the song_info dictionary
+            song_name = song_data['name']
+            artist = song_data['artist']
+            album = song_data['album']
+            length = song_data['length']
+            genre = song_data['genre']
+            price = song_data['price']
             
-            release_date_str = song_info['release_date']
+            release_date_str = song_data['release_date']
             try:
                 release_date = datetime.strptime(release_date_str, '%a %b %d %Y')
                 release_date_formatted = f"<t:{int(release_date.timestamp())}>"
@@ -148,8 +149,8 @@ class Search(commands.Cog):
                 release_date_formatted = "N/A"
 
             embed = discord.Embed(title=f"🎶・{song_name}")
-            embed.set_thumbnail(url=song_info['thumbnail'])
-            embed.url = song_info['url']
+            embed.set_thumbnail(url=song_data['thumbnail'])
+            embed.url = song_data['url']
             embed.add_field(name="💬┇Name", value=song_name, inline=True)
             embed.add_field(name="🎤┇Artist", value=artist, inline=True)
             embed.add_field(name="📁┇Album", value=album, inline=True)
