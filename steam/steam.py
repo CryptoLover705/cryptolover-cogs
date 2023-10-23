@@ -7,7 +7,10 @@ intents.typing = False
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-class Steam:
+class Steam(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
     @staticmethod
     async def get_steam_info(name):
         try:
