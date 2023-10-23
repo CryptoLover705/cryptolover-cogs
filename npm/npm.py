@@ -21,8 +21,11 @@ class Npm(commands.Cog):
 
         if "name" in package_info:  # Check if 'name' key exists in the package_info dictionary
             last_published_str = package_info.get('last_published', 'N/A')
-            last_published_timestamp = datetime.fromisoformat(last_published_str)
-            last_published_formatted = f"<t:{int(last_published_timestamp.timestamp())}>"
+            try:
+                last_published_timestamp = datetime.strptime(last_published_str, '%a %b %d %Y')
+                last_published_formatted = f"<t:{int(last_published_timestamp.timestamp())}>"
+            except ValueError:
+                last_published_formatted = "N/A"
 
             embed = discord.Embed(title=f"📁・{package_info['name']}")
             embed.add_field(name="💬┇Name", value=package_info['name'], inline=True)
