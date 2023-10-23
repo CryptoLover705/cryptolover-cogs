@@ -106,6 +106,8 @@ class Search(commands.Cog):
             r = await pop.itunes(song)
         except Exception as e:
             return await ctx.send(f"Song not found!", reference=ctx.message)
+        
+        r = await r  # Await the coroutine to get the actual data
 
         embed = discord.Embed(title=f"🎶・{r['name']}")
         embed.set_thumbnail(url=r['thumbnail'])
