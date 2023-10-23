@@ -1,0 +1,17 @@
+{
+    "author": 
+    [
+      "CryptoLover705"
+    ],
+    "min_bot_version": "3.4.0",
+    "description": "view Steam games",
+    "hidden": true,
+    "install_msg": "Thank you for installing Steam. Get started with `[p]load steam`, then `[p]help steam`",
+    "short": "View Steam games",
+    "end_user_data_statement": "This cog does not store any End User Data",
+    "tags": 
+    [
+      "cryptolover705",
+      "utils"
+    ]
+}
