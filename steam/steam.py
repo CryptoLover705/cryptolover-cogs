@@ -14,12 +14,12 @@ class Steam(commands.Cog):
 
     @commands.command()
     async def steam(self, ctx, *, name: str):
-        try:
-            steam_info = await self.get_steam_info(name)
-        except Exception as e:
+        steam_info = await self.get_steam_info(name)
+
+        if steam_info is None:
             return await ctx.send("Game not found!")
 
-        if "name" in steam_info:
+        if steam_info and "name" in steam_info:  # Check if 'name' key exists in the package_info dictionary
             last_published_str = steam_info.get('last_published', 'N/A')
             try:
                 last_published_timestamp = datetime.strptime(last_published_str, '%a %b %d %Y')
