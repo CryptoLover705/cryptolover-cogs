@@ -127,7 +127,7 @@ class Search(commands.Cog):
 
     def fetch_itunes_data(self, song):
         try:
-            url = f'https://itunes.apple.com/search?term={song}&entity=musicTrack'
+            url = f'https://music.apple.com/us/search?term={song}'
             response = requests.get(url)
             response.raise_for_status()
             data = response.json()
