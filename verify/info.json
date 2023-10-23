@@ -1,0 +1,17 @@
+{
+    "author": 
+    [
+      "CryptoLover705"
+    ],
+    "min_bot_version": "3.4.0",
+    "description": "Captcha system",
+    "hidden": false,
+    "install_msg": "Thank you for installing verify. Get started with `[p]load verify`, then `[p]help verify`",
+    "short": "Captcha system",
+    "end_user_data_statement": "This cog does not store any End User Data",
+    "tags": 
+    [
+      "cryptolover705",
+      "utils"
+    ]
+}
