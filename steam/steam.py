@@ -19,7 +19,7 @@ class Steam(commands.Cog):
         except Exception as e:
             return None
 
-@bot.command()
+@commands.command()
 async def steam(ctx, name: str):
     steam_info = await Steam.get_steam_info(name)
 
