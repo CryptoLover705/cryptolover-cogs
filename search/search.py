@@ -132,18 +132,26 @@ class Search(commands.Cog):
         except Exception as e:
             return await ctx.send("Song not found!")
 
-        embed = discord.Embed(title=f"🎶・{song_info['name']}")
-        embed.set_thumbnail(url=song_info['thumbnail'])
-        embed.url = song_info['url']
-        embed.add_field(name="💬┇Name", value=song_info['name'], inline=True)
-        embed.add_field(name="🎤┇Artist", value=song_info['artist'], inline=True)
-        embed.add_field(name="📁┇Album", value=song_info['album'], inline=True)
-        embed.add_field(name="🎼┇Length", value=song_info['length'], inline=True)
-        embed.add_field(name="🏷️┇Genre", value=song_info['genre'], inline=True)
-        embed.add_field(name="💵┇Price", value=song_info['price'], inline=True)
+        song_name = song_info.get('name', 'N/A')
+        artist = song_info.get('artist', 'N/A')
+        album = song_info.get('album', 'N/A')
+        length = song_info.get('length', 'N/A')
+        genre = song_info.get('genre', 'N/A')
+        price = song_info.get('price', 'N/A')
         
-        release_date_timestamp = int(song_info['release_date'].timestamp())
-        embed.add_field(name="⏰┇Release Date", value=f"<t:{release_date_timestamp}>", inline=True)
+        release_date = song_info.get('release_date', 'N/A')
+        release_date_formatted = f"<t:{int(release_date.timestamp())}>" if release_date != 'N/A' else 'N/A'
+
+        embed = discord.Embed(title=f"🎶・{song_name}")
+        embed.set_thumbnail(url=song_info.get('thumbnail', ''))
+        embed.url = song_info.get('url', '')
+        embed.add_field(name="💬┇Name", value=song_name, inline=True)
+        embed.add_field(name="🎤┇Artist", value=artist, inline=True)
+        embed.add_field(name="📁┇Album", value=album, inline=True)
+        embed.add_field(name="🎼┇Length", value=length, inline=True)
+        embed.add_field(name="🏷️┇Genre", value=genre, inline=True)
+        embed.add_field(name="💵┇Price", value=price, inline=True)
+        embed.add_field(name="⏰┇Release Date", value=release_date_formatted, inline=True)
 
         await ctx.send(embed=embed)
 
