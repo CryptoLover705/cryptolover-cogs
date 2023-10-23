@@ -52,24 +52,24 @@ class Search(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def steam(self, ctx, name: str):
-        await ctx.defer()
+    # @commands.command()
+    # async def steam(self, ctx, name: str):
+    #     await ctx.defer()
         
-        try:
-            s = await pop.steam(name)
-        except Exception as e:
-            return await ctx.send("Application not found!", reference=ctx.message)
+    #     try:
+    #         s = await pop.steam(name)
+    #     except Exception as e:
+    #         return await ctx.send("Application not found!", reference=ctx.message)
         
-        embed = discord.Embed(title=f"🎮・{s.name}")
-        embed.set_thumbnail(url=s.thumbnail)
-        embed.add_field(name="💬┇Name", value=s.name, inline=True)
-        embed.add_field(name="📃┇Capital", value=s.description, inline=False)
-        embed.add_field(name="💻┇Developers", value=", ".join(s.developers), inline=True)
-        embed.add_field(name="☁┇Publishers", value=", ".join(s.publishers), inline=True)
-        embed.add_field(name="🪙┇Price", value=s.price, inline=True)
+    #     embed = discord.Embed(title=f"🎮・{s.name}")
+    #     embed.set_thumbnail(url=s.thumbnail)
+    #     embed.add_field(name="💬┇Name", value=s.name, inline=True)
+    #     embed.add_field(name="📃┇Capital", value=s.description, inline=False)
+    #     embed.add_field(name="💻┇Developers", value=", ".join(s.developers), inline=True)
+    #     embed.add_field(name="☁┇Publishers", value=", ".join(s.publishers), inline=True)
+    #     embed.add_field(name="🪙┇Price", value=s.price, inline=True)
 
-        await ctx.send(embed=embed)
+    #     await ctx.send(embed=embed)
 
     @commands.command()
     async def google(self, ctx, name: str):
@@ -125,43 +125,43 @@ class Search(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def itunes(self, ctx, song: str):
-        try:
-            song_info = await pop.itunes(song)
-        except Exception as e:
-            return await ctx.send("Song not found!")
+    # @commands.command()
+    # async def itunes(self, ctx, song: str):
+    #     try:
+    #         song_info = await pop.itunes(song)
+    #     except Exception as e:
+    #         return await ctx.send("Song not found!")
 
-        song_data = await song_info
-        if "name" in song_data:  # Check if 'name' key exists in the song_info dictionary
-            song_name = song_data['name']
-            artist = song_data['artist']
-            album = song_data['album']
-            length = song_data['length']
-            genre = song_data['genre']
-            price = song_data['price']
+    #     song_data = await song_info
+    #     if "name" in song_data:  # Check if 'name' key exists in the song_info dictionary
+    #         song_name = song_data['name']
+    #         artist = song_data['artist']
+    #         album = song_data['album']
+    #         length = song_data['length']
+    #         genre = song_data['genre']
+    #         price = song_data['price']
             
-            release_date_str = song_data['release_date']
-            try:
-                release_date = datetime.strptime(release_date_str, '%a %b %d %Y')
-                release_date_formatted = f"<t:{int(release_date.timestamp())}>"
-            except ValueError:
-                release_date_formatted = "N/A"
+    #         release_date_str = song_data['release_date']
+    #         try:
+    #             release_date = datetime.strptime(release_date_str, '%a %b %d %Y')
+    #             release_date_formatted = f"<t:{int(release_date.timestamp())}>"
+    #         except ValueError:
+    #             release_date_formatted = "N/A"
 
-            embed = discord.Embed(title=f"🎶・{song_name}")
-            embed.set_thumbnail(url=song_data['thumbnail'])
-            embed.url = song_data['url']
-            embed.add_field(name="💬┇Name", value=song_name, inline=True)
-            embed.add_field(name="🎤┇Artist", value=artist, inline=True)
-            embed.add_field(name="📁┇Album", value=album, inline=True)
-            embed.add_field(name="🎼┇Length", value=length, inline=True)
-            embed.add_field(name="🏷️┇Genre", value=genre, inline=True)
-            embed.add_field(name="💵┇Price", value=price, inline=True)
-            embed.add_field(name="⏰┇Release Date", value=release_date_formatted, inline=True)
-        else:
-            return await ctx.send("Song information format is not recognized.")
+    #         embed = discord.Embed(title=f"🎶・{song_name}")
+    #         embed.set_thumbnail(url=song_data['thumbnail'])
+    #         embed.url = song_data['url']
+    #         embed.add_field(name="💬┇Name", value=song_name, inline=True)
+    #         embed.add_field(name="🎤┇Artist", value=artist, inline=True)
+    #         embed.add_field(name="📁┇Album", value=album, inline=True)
+    #         embed.add_field(name="🎼┇Length", value=length, inline=True)
+    #         embed.add_field(name="🏷️┇Genre", value=genre, inline=True)
+    #         embed.add_field(name="💵┇Price", value=price, inline=True)
+    #         embed.add_field(name="⏰┇Release Date", value=release_date_formatted, inline=True)
+    #     else:
+    #         return await ctx.send("Song information format is not recognized.")
 
-        await ctx.send(embed=embed)
+    #     await ctx.send(embed=embed)
 
     @commands.command()
     async def gecko(self, ctx, coin: str, currency: str):
