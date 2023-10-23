@@ -26,7 +26,7 @@ class Verify(commands.Cog):
         return embed
 
     async def create_verification_button(self, ctx, channel):
-        verify_button = discord.Button(style=discord.ButtonStyle.success, label="Verify")
+        verify_button = discord.Button(style=discord.ButtonStyle.green, label="Verify")
         verify_action_row = discord.ActionRow(verify_button)
         message = await channel.send("Click the button to verify yourself.", components=[verify_action_row])
 
