@@ -102,47 +102,6 @@ class Search(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def itunes(self, ctx, song: str):
-        try:
-            r = self.fetch_itunes_data(song)
-            if not r:
-                raise Exception("Song not found")
-
-            embed = discord.Embed(title=f"🎶・{r['trackName']}")
-            embed.set_thumbnail(url=r.get('artworkUrl100', ''))
-            embed.url = r.get('trackViewUrl', '')
-            embed.add_field(name="💬┇Name", value=r.get('trackName', 'N/A'), inline=True)
-            embed.add_field(name="🎤┇Artist", value=r.get('artistName', 'N/A'), inline=True)
-            embed.add_field(name="📁┇Album", value=r.get('collectionName', 'N/A'), inline=True)
-            embed.add_field(name="🎼┇Length", value=f"{r.get('trackTimeMillis', 0) / 60000} minutes", inline=True)
-            embed.add_field(name="🏷️┇Genre", value=r.get('primaryGenreName', 'N/A'), inline=True)
-            embed.add_field(name="💵┇Price", value=f"${r.get('collectionPrice', 'N/A')}", inline=True)
-            embed.add_field(
-                name="⏰┇Release Date",
-                value=f"<t:{int(r.get('releaseDate', 'N/A')[:-5])}>",
-                inline=True,
-            )
-
-            await ctx.send(embed=embed)
-        except Exception as e:
-            return await ctx.send(f"An error occurred while fetching song data. Please try again later.", reference=ctx.message)
-
-    def fetch_itunes_data(self, song):
-        try:
-            url = f'https://itunes.apple.com/search?term={song}&entity=musicTrack'
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-
-            if data['resultCount'] == 0:
-                return None
-
-            song_data = data['results'][0]
-            return song_data
-        except Exception as e:
-            return None
-
-    @commands.command()
     async def github(self, ctx, name: str):
         try:
             r = await pop.github(name)
@@ -167,6 +126,28 @@ class Search(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    async def itunes(self, ctx, song: str):
+        try:
+            song_info = await pop.itunes(song)
+        except Exception as e:
+            return await ctx.send("Song not found!")
+
+        embed = discord.Embed(title=f"🎶・{song_info['name']}")
+        embed.set_thumbnail(url=song_info['thumbnail'])
+        embed.url = song_info['url']
+        embed.add_field(name="💬┇Name", value=song_info['name'], inline=True)
+        embed.add_field(name="🎤┇Artist", value=song_info['artist'], inline=True)
+        embed.add_field(name="📁┇Album", value=song_info['album'], inline=True)
+        embed.add_field(name="🎼┇Length", value=song_info['length'], inline=True)
+        embed.add_field(name="🏷️┇Genre", value=song_info['genre'], inline=True)
+        embed.add_field(name="💵┇Price", value=song_info['price'], inline=True)
+        
+        release_date_timestamp = int(song_info['release_date'].timestamp())
+        embed.add_field(name="⏰┇Release Date", value=f"<t:{release_date_timestamp}>", inline=True)
+
+        await ctx.send(embed=embed)
+
+    @commands.command()
     async def gecko(self, ctx, coin: str, currency: str):
         async with aiohttp.ClientSession() as session:
             try:
@@ -180,4 +161,4 @@ class Search(commands.Cog):
                 embed = discord.Embed(title="💹・Crypto stats", description=f"The current price of 1 {coin} = {price} {currency}")
                 await ctx.send(embed=embed)
             except Exception as e:
-                return await ctx.send("An error occurred. Please try again later.", reference=ctx.message)
+                return await ctx.send("An error occurred. Please try again later.", reference=ctx.message) 
